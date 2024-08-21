@@ -61,3 +61,6 @@ build/
 
 .env
 dist
+
+Dockerfile
+docker-compose.*

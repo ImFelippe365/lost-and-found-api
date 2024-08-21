@@ -1,25 +1,8 @@
-import Joi from 'joi';
+import z from 'zod';
 
-export interface IUserLoginDto {
-  email: string;
-  password: string;
-}
-
-export interface IUserSignupDto {
-  email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
-}
-
-export const loginSchema = Joi.object({
-  email: Joi.string().email().required(),
-  password: Joi.string().min(8).required(),
+export const loginSchema = z.object({
+  email: z.string().email(),
+  password: z.string(),
 });
 
-export const signupSchema = Joi.object({
-  email: Joi.string().email().required(),
-  password: Joi.string().min(8).required(),
-  firstName: Joi.string().optional(),
-  lastName: Joi.string().optional(),
-});
+export interface ILoginSchema extends z.infer<typeof loginSchema> {}

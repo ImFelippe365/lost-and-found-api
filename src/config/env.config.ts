@@ -1,5 +1,5 @@
 import path from 'path';
-import Joi from 'joi';
+import z from 'zod';
 import dotenv from 'dotenv';
 
 export default function loadConfig(): void {
@@ -13,22 +13,20 @@ export default function loadConfig(): void {
     );
   }
 
-  const schema = Joi.object({
-    NODE_ENV: Joi.string()
-      .valid('development', 'testing', 'production')
-      .required(),
-    LOG_LEVEL: Joi.string()
-      .valid('debug', 'info', 'warn', 'error', 'fatal')
-      .required(),
-    API_HOST: Joi.string().required(),
-    API_PORT: Joi.string().required(),
-    DATABASE_URL: Joi.string().required(),
-    APP_JWT_SECRET: Joi.string().required(),
-  }).unknown(true);
+  const schema = z
+    .object({
+      NODE_ENV: z.enum(['development', 'testing', 'production']),
+      LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error', 'fatal']),
+      API_HOST: z.string(),
+      API_PORT: z.string(),
+      DATABASE_URL: z.string(),
+      APP_JWT_SECRET: z.string(),
+    })
+    .nullable();
 
-  const { error } = schema.validate(process.env, { abortEarly: false });
-
-  if (error) {
+  try {
+    schema.parse(process.env);
+  } catch (error) {
     throw new Error(`Config validation error: ${error.message}`);
   }
 }

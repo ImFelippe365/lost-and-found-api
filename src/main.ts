@@ -1,12 +1,13 @@
-import fastify from 'fastify';
+import fastify, { FastifyReply, FastifyRequest } from 'fastify';
 import pino from 'pino';
 import userRouter from './routes/user.router';
-import postRouter from './routes/post.router';
 import loadConfig from './config/env.config';
-import { utils } from './utils';
+import { prisma, utils } from './utils';
 import formbody from '@fastify/formbody';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
+import * as JWT from 'jsonwebtoken';
+import itemRouter from './routes/item.router';
 
 loadConfig();
 
@@ -18,14 +19,41 @@ const startServer = async () => {
     logger: pino({ level: process.env.LOG_LEVEL }),
   });
 
+  server.decorate(
+    'authenticate',
+    async (req: FastifyRequest, reply: FastifyReply) => {
+      const token = req.headers.authorization;
+      if (!token) {
+        return reply
+          .status(401)
+          .send({ message: 'É preciso informar um token' });
+      }
+
+      const decoded = JWT.verify(
+        token,
+        process.env.APP_JWT_SECRET as string,
+      ) as JWT.JwtPayload;
+
+      if (!decoded) {
+        return reply.status(401).send({ message: 'Token inválido' });
+      }
+
+      const user = await prisma.user.findUniqueOrThrow({
+        where: {
+          id: decoded.id,
+        },
+      });
+      req.user = user;
+    },
+  );
   // Register middlewares
   server.register(formbody);
   server.register(cors);
   server.register(helmet);
 
   // Register routes
-  server.register(userRouter, { prefix: '/api/user' });
-  server.register(postRouter, { prefix: '/api/post' });
+  server.register(userRouter, { prefix: '/api/users' });
+  server.register(itemRouter, { prefix: '/api/items' });
 
   // Set error handler
   server.setErrorHandler((error, _request, reply) => {
@@ -45,11 +73,6 @@ const startServer = async () => {
         message: 'Health check endpoint failed.',
       });
     }
-  });
-
-  // Root route
-  server.get('/', (request, reply) => {
-    reply.status(200).send({ message: 'Hello from fastify boilerplate!' });
   });
 
   // Graceful shutdown

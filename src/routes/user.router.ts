@@ -1,22 +1,12 @@
 import { FastifyInstance } from 'fastify';
 import * as controllers from '../controllers';
 import { utils } from '../utils';
-import { loginSchema, signupSchema } from '../schemas/User';
+import { loginSchema } from '../schemas/User';
 
 async function userRouter(fastify: FastifyInstance) {
   fastify.post(
     '/login',
     {
-      schema: {
-        body: {
-          type: 'object',
-          required: ['email', 'password'],
-          properties: {
-            email: { type: 'string', format: 'email' },
-            password: { type: 'string', minLength: 8 },
-          },
-        },
-      },
       config: {
         description: 'User login endpoint',
       },
@@ -28,18 +18,6 @@ async function userRouter(fastify: FastifyInstance) {
   fastify.post(
     '/signup',
     {
-      schema: {
-        body: {
-          type: 'object',
-          required: ['email', 'password'],
-          properties: {
-            email: { type: 'string', format: 'email' },
-            password: { type: 'string', minLength: 8 },
-            firstName: { type: 'string' },
-            lastName: { type: 'string' },
-          },
-        },
-      },
       config: {
         description: 'User signup endpoint',
       },

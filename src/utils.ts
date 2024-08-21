@@ -57,7 +57,7 @@ export const utils = {
     return token || null;
   },
 
-  verifyToken: (token: string): any => {
+  verifyToken: (token: string) => {
     try {
       return JWT.verify(token, process.env.APP_JWT_SECRET as string);
     } catch (err) {
@@ -66,7 +66,7 @@ export const utils = {
   },
 
   validateSchema: (schema: Joi.ObjectSchema) => {
-    return (data: any) => {
+    return (data) => {
       const { error } = schema.validate(data);
       if (error) {
         throw new Error(error.details[0].message);
@@ -74,14 +74,15 @@ export const utils = {
     };
   },
 
-  preValidation: (schema: Joi.ObjectSchema) => {
+  preValidation: (schema: Zod.AnyZodObject) => {
     return (
       request: FastifyRequest,
       reply: FastifyReply,
       done: (err?: Error) => void,
     ) => {
-      const { error } = schema.validate(request.body);
-      if (error) {
+      try {
+        schema.parse(request.body);
+      } catch (error) {
         return done(error);
       }
       done();

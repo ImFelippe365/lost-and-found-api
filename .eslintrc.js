@@ -21,18 +21,6 @@ module.exports = {
     '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     'no-console': 'warn',
     'no-debugger': 'warn',
-    'import/order': [
-      'error',
-      {
-        groups: [['builtin', 'external', 'internal']],
-        'newlines-between': 'always',
-      },
-    ],
-    'node/no-unsupported-features/es-syntax': [
-      'error',
-      {
-        ignores: ['modules'],
-      },
-    ],
+    'eslint/no-unused-vars': 'warn'
   },
 };

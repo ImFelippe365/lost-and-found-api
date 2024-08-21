@@ -14,8 +14,9 @@
     "paths": {
       "config/*": ["config/*"]
     },
-    "types": ["node", "jest"]
+    "types": ["node", "jest"],
+    "strict": true
   },
   "include": ["src", "test"],
-  "exclude": ["node_modules", "dist", "coverage"]
+  "exclude": ["node_modules", "dist", "coverage", "prisma"]
 }

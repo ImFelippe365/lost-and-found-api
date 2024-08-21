@@ -4,14 +4,11 @@ import { ERRORS, handleServerError } from '../helpers/errors.helper';
 import * as JWT from 'jsonwebtoken';
 import { utils } from '../utils';
 import { STANDARD } from '../constants/request';
-import { IUserLoginDto, IUserSignupDto } from '../schemas/User';
+import bcrypt from 'bcrypt';
 
-export const login = async (
-  request: FastifyRequest<{
-    Body: IUserLoginDto;
-  }>,
-  reply: FastifyReply,
-) => {
+const SALT_ROUNDS = 10;
+
+export const login = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
     const { email, password } = request.body;
     const user = await prisma.user.findUnique({ where: { email } });
@@ -31,7 +28,7 @@ export const login = async (
     const token = JWT.sign(
       {
         id: user.id,
-        email: user.email,
+        registration: user.,
       },
       process.env.APP_JWT_SECRET as string,
     );
@@ -84,5 +81,32 @@ export const signUp = async (
     });
   } catch (err) {
     return handleServerError(reply, err);
+  }
+};
+
+const createUser = async () => {
+  const { password, email, name } = req.body;
+  const user = await prisma.user.findUnique({
+    where: {
+      email: email,
+    },
+  });
+  if (user) {
+    return reply.code(401).send({
+      message: 'Usuário com este e-mail já existe',
+    });
+  }
+  try {
+    const hash = await bcrypt.hash(password, SALT_ROUNDS);
+    const user = await prisma.user.create({
+      data: {
+        password: hash,
+        email,
+        name,
+      },
+    });
+    return reply.code(201).send(user);
+  } catch (e) {
+    return reply.code(500).send(e);
   }
 };

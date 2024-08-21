@@ -1,0 +1,50 @@
+model Item {
+  id                 Int          @id @unique @default(autoincrement()) @map("item_id")
+  status             ItemStatus   @default(LOST)
+  name               String
+  description        String?
+  foundBy            String?
+  foundLocation      String?
+  foundDate          DateTime
+  image              String?
+  shift              Shift
+  withdrawalDeadline DateTime
+  pickupLocation     String?
+  // Ainda precisa adicionar a parte do campus
+  userId             Int
+  createdBy          User         @relation(fields: [userId], references: [id])
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+  ClaimedItem        ClaimedItem?
+}
+
+model Claimant {
+  id           Int           @id @unique @default(autoincrement()) @map("claimant_id")
+  name         String
+  document     String        @db.VarChar(14)
+  claimedItems ClaimedItem[]
+}
+
+model ClaimedItem {
+  id             Int      @id @unique @default(autoincrement())
+  itemId         Int      @unique
+  item           Item     @relation(fields: [itemId], references: [id])
+  userId         Int
+  user           User     @relation(fields: [userId], references: [id])
+  claimantId     Int
+  claimant       Claimant @relation(fields: [claimantId], references: [id])
+  withdrawalDate DateTime @default(now())
+  createdAt      DateTime @default(now())
+}
+
+enum Shift {
+  MORNING
+  AFTERNOON
+  NIGHT
+}
+
+enum ItemStatus {
+  LOST
+  DELIVERED
+  EXPIRED
+}
