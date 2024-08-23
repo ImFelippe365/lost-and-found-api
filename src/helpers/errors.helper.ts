@@ -22,6 +22,7 @@ export const ERRORS = {
 };
 
 export function handleServerError(reply: FastifyReply, error: any) {
+  console.error(JSON.stringify(error));
   if (error instanceof AppError) {
     return reply.status(error.statusCode).send({ message: error.message });
   }

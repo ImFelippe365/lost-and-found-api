@@ -18,5 +18,6 @@
     "strict": true
   },
   "include": ["src", "test"],
-  "exclude": ["node_modules", "dist", "coverage", "prisma"]
+  "exclude": ["node_modules", "dist", "coverage", "prisma"],
+  "files": ["fastify.d.ts"]
 }

@@ -25,6 +25,7 @@
     "@fastify/formbody": "^7.4.0",
     "@fastify/helmet": "^11.1.1",
     "@prisma/client": "^5.16.2",
+    "axios": "^1.7.4",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^2.4.3",
     "dotenv": "^16.4.5",
@@ -68,9 +69,9 @@
     "prisma": "^5.16.2",
     "stop-only": "^3.3.2",
     "tap": "21.0.0",
-    "ts-node": "10.9.2",
+    "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
-    "typescript": "5.5.3"
+    "typescript": "^5.5.4"
   },
   "lint-staged": {
     "{src,test}/**/*.{ts,js,json}": [

@@ -11,14 +11,20 @@ generator client {
   previewFeatures = ["prismaSchemaFolder"]
 }
 
+enum Department {
+  EMPLOYEE
+  STUDENT
+}
+
 model User {
-  id         Int      @id @unique @default(autoincrement()) @map("user_id")
-  registration      String   @unique
-  name       String
-  password   String
-  department String
-  created_at DateTime @default(now())
-  picture    String
+  id                  Int        @id @unique @default(autoincrement()) @map("user_id")
+  registration        String     @unique
+  name                String
+  password            String
+  department          Department
+  isScholarshipHolder Boolean    @default(false)
+  createdAt           DateTime   @default(now())
+  picture             String
   // Ainda precisa adicionar a parte do campus
 
   items        Item[]

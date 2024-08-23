@@ -9,7 +9,7 @@ import {
   ICreateItemSchema,
   ItemResponseSchema,
   UpdateItemSchema,
-} from 'src/schemas/Item';
+} from '../schemas/Item';
 import { IRequestParams } from 'src/types/types';
 
 export const create = async (request: FastifyRequest, reply: FastifyReply) => {
@@ -18,7 +18,7 @@ export const create = async (request: FastifyRequest, reply: FastifyReply) => {
     const createdItem = await prisma.item.create({
       data: {
         ...payload,
-        userId: request.user.id,
+        userId: request?.user.id,
       },
     });
 
@@ -64,4 +64,3 @@ export const remove = async (request: FastifyRequest, reply: FastifyReply) => {
     return handleServerError(reply, err);
   }
 };
-

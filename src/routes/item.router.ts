@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import * as controllers from '../controllers';
 import { utils } from '../utils';
-import { CreateItemSchema } from 'src/schemas/Item';
+import { CreateItemSchema } from '../schemas/Item';
 
 async function itemRouter(fastify: FastifyInstance) {
   fastify.post(
@@ -10,7 +10,8 @@ async function itemRouter(fastify: FastifyInstance) {
       config: {
         description: 'Item entity management',
       },
-      preValidation: utils.preValidation(CreateItemSchema),
+      preValidation: utils.preBodyValidation(CreateItemSchema),
+      preHandler: utils.auth,
     },
     controllers.create,
   );

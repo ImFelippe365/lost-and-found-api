@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import * as JWT from 'jsonwebtoken';
 import Joi from 'joi';
 import { FastifyReply, FastifyRequest } from 'fastify';
+import Zod from 'zod';
 
 export const prisma = new PrismaClient();
 
@@ -44,7 +45,7 @@ export const utils = {
   healthCheck: async (): Promise<void> => {
     try {
       await prisma.$queryRaw`SELECT 1`;
-    } catch (e) {
+    } catch (e: any) {
       throw new Error(`Health check failed: ${e.message}`);
     }
   },
@@ -74,7 +75,7 @@ export const utils = {
     };
   },
 
-  preValidation: (schema: Zod.AnyZodObject) => {
+  preBodyValidation: (schema: Zod.AnyZodObject) => {
     return (
       request: FastifyRequest,
       reply: FastifyReply,
@@ -82,10 +83,63 @@ export const utils = {
     ) => {
       try {
         schema.parse(request.body);
-      } catch (error) {
+      } catch (error: any) {
         return done(error);
       }
       done();
     };
+  },
+
+  preQueryValidation: (schema: Zod.AnyZodObject) => {
+    return (
+      request: FastifyRequest,
+      reply: FastifyReply,
+      done: (err?: Error) => void,
+    ) => {
+      try {
+        schema.parse(request.query);
+      } catch (error: any) {
+        return done(error);
+      }
+      done();
+    };
+  },
+
+  preParamsValidation: (schema: Zod.AnyZodObject) => {
+    return (
+      request: FastifyRequest,
+      reply: FastifyReply,
+      done: (err?: Error) => void,
+    ) => {
+      try {
+        schema.parse(request.params);
+      } catch (error: any) {
+        return done(error);
+      }
+      done();
+    };
+  },
+
+  auth: async (req: FastifyRequest, reply: FastifyReply) => {
+    const token = req.headers.authorization;
+    if (!token) {
+      return reply.status(401).send({ message: 'É preciso informar um token' });
+    }
+
+    const decoded = JWT.verify(
+      token,
+      process.env.APP_JWT_SECRET as string,
+    ) as JWT.JwtPayload;
+
+    if (!decoded) {
+      return reply.status(401).send({ message: 'Token inválido' });
+    }
+
+    const user = await prisma.user.findUniqueOrThrow({
+      where: {
+        id: decoded.id,
+      },
+    });
+    req['user'] = user;
   },
 };

@@ -1,7 +1,8 @@
 import { FastifyInstance } from 'fastify';
 import * as controllers from '../controllers';
 import { utils } from '../utils';
-import { loginSchema } from '../schemas/User';
+import { LoginSchema } from '../schemas/User';
+import { PaginationRequestSchema } from '../schemas/Utils';
 
 async function userRouter(fastify: FastifyInstance) {
   fastify.post(
@@ -10,20 +11,22 @@ async function userRouter(fastify: FastifyInstance) {
       config: {
         description: 'User login endpoint',
       },
-      preValidation: utils.preValidation(loginSchema),
+      preValidation: utils.preBodyValidation(LoginSchema),
+      preHandler: utils.auth,
     },
     controllers.login,
   );
 
-  fastify.post(
-    '/signup',
+  fastify.get(
+    '/scholarship-students',
     {
       config: {
-        description: 'User signup endpoint',
+        description: 'List scholarship students',
       },
-      preValidation: utils.preValidation(signupSchema),
+      preValidation: utils.preQueryValidation(PaginationRequestSchema),
+      // preHandler: utils.auth,
     },
-    controllers.signUp,
+    controllers.listScholarshipStudents,
   );
 }
 

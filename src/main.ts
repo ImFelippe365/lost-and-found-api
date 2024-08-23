@@ -19,33 +19,6 @@ const startServer = async () => {
     logger: pino({ level: process.env.LOG_LEVEL }),
   });
 
-  server.decorate(
-    'authenticate',
-    async (req: FastifyRequest, reply: FastifyReply) => {
-      const token = req.headers.authorization;
-      if (!token) {
-        return reply
-          .status(401)
-          .send({ message: 'É preciso informar um token' });
-      }
-
-      const decoded = JWT.verify(
-        token,
-        process.env.APP_JWT_SECRET as string,
-      ) as JWT.JwtPayload;
-
-      if (!decoded) {
-        return reply.status(401).send({ message: 'Token inválido' });
-      }
-
-      const user = await prisma.user.findUniqueOrThrow({
-        where: {
-          id: decoded.id,
-        },
-      });
-      req.user = user;
-    },
-  );
   // Register middlewares
   server.register(formbody);
   server.register(cors);

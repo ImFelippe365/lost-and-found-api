@@ -26,7 +26,7 @@ export default function loadConfig(): void {
 
   try {
     schema.parse(process.env);
-  } catch (error) {
+  } catch (error: any) {
     throw new Error(`Config validation error: ${error.message}`);
   }
 }
