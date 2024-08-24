@@ -1,20 +1,61 @@
 import { FastifyInstance } from 'fastify';
 import * as controllers from '../controllers';
 import { utils } from '../utils';
-import { CreateItemSchema } from '../schemas/Item';
+import {
+  ClaimItemSchema,
+  CreateItemSchema,
+  UpdateItemSchema,
+} from '../schemas/Item';
 
-async function itemRouter(fastify: FastifyInstance) {
-  fastify.post(
-    '/item',
+export async function itemRouter(fastify: FastifyInstance) {
+  fastify.get(
+    '/pageable',
     {
-      config: {
-        description: 'Item entity management',
-      },
+      preHandler: utils.auth,
+    },
+    controllers.listPageable,
+  );
+
+  fastify.post(
+    '/',
+    {
       preValidation: utils.preBodyValidation(CreateItemSchema),
       preHandler: utils.auth,
     },
     controllers.create,
   );
-}
 
-export default itemRouter;
+  fastify.patch(
+    '/:itemId/claim',
+    {
+      preValidation: utils.preBodyValidation(ClaimItemSchema),
+      preHandler: utils.auth,
+    },
+    controllers.claimItem,
+  );
+
+  fastify.put(
+    '/:itemId',
+    {
+      preValidation: utils.preBodyValidation(UpdateItemSchema),
+      preHandler: utils.auth,
+    },
+    controllers.update,
+  );
+
+  fastify.delete(
+    '/:itemId',
+    {
+      preHandler: utils.auth,
+    },
+    controllers.remove,
+  );
+
+  fastify.post(
+    '/:itemId/upload-image',
+    {
+      preHandler: utils.auth,
+    },
+    controllers.uploadItemImage,
+  );
+}

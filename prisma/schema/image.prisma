@@ -1,0 +1,9 @@
+model Image {
+  id       Int    @id @unique @default(autoincrement()) @map("campus_id")
+  uuid     String @default(uuid()) @db.Uuid @unique
+  name     String
+  filetype String
+  path     String
+  size     Int
+  Item     Item[]
+}

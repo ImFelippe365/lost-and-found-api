@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Item" ALTER COLUMN "foundDate" SET DATA TYPE DATE,
+ALTER COLUMN "withdrawalDeadline" SET DATA TYPE DATE;

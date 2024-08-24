@@ -1,0 +1,7 @@
+model Campus {
+  id      Int    @id @unique @default(autoincrement()) @map("campus_id")
+  name    String @unique
+  acronym String @unique
+  User    User[]
+  Item    Item[]
+}

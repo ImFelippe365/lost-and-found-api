@@ -64,3 +64,5 @@ dist
 
 Dockerfile
 docker-compose.*
+
+public

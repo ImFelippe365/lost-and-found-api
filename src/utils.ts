@@ -1,13 +1,17 @@
 import * as bcrypt from 'bcryptjs';
 import { PrismaClient } from '@prisma/client';
 import * as JWT from 'jsonwebtoken';
-import Joi from 'joi';
 import { FastifyReply, FastifyRequest } from 'fastify';
-import Zod from 'zod';
+import Zod, { ZodError } from 'zod';
+import { AppError, ERRORS } from './helpers/errors.helper';
 
 export const prisma = new PrismaClient();
 
 export const utils = {
+  objectIsEmpty: (data: object) => {
+    return Object.keys(data).length === 0;
+  },
+
   isJSON: (data: string) => {
     try {
       JSON.parse(data);
@@ -68,11 +72,12 @@ export const utils = {
     }
   },
 
-  validateSchema: (schema: Joi.ObjectSchema) => {
+  validateSchema: (schema: Zod.AnyZodObject) => {
     return (data) => {
-      const { error } = schema.validate(data);
-      if (error) {
-        throw new Error(error.details[0].message);
+      try {
+        const { error } = schema.parse(data);
+      } catch (e: any) {
+        throw new Error(e);
       }
     };
   },
@@ -123,18 +128,19 @@ export const utils = {
   },
 
   auth: async (req: FastifyRequest, reply: FastifyReply) => {
-    const token = req.headers.authorization;
-    if (!token) {
+    const authorizationToken = req.headers.authorization;
+    if (!authorizationToken) {
       return reply.status(401).send({ message: 'É preciso informar um token' });
     }
 
+    const token = authorizationToken.split('Bearer ')[1];
     const decoded = JWT.verify(
       token,
       process.env.APP_JWT_SECRET as string,
     ) as JWT.JwtPayload;
 
     if (!decoded) {
-      return reply.status(401).send({ message: 'Token inválido' });
+      throw new AppError('Token inválido', ERRORS.invalidToken.statusCode);
     }
 
     const user = await prisma.user.findUniqueOrThrow({

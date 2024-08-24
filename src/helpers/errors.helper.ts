@@ -1,3 +1,5 @@
+import { PrismaClientValidationError } from '@prisma/client/runtime/library';
+import { AxiosError } from 'axios';
 import { FastifyReply } from 'fastify';
 
 export class AppError extends Error {
@@ -23,8 +25,16 @@ export const ERRORS = {
 
 export function handleServerError(reply: FastifyReply, error: any) {
   console.error(JSON.stringify(error));
+  if (error instanceof PrismaClientValidationError) {
+    return reply.status(500).send({ message: error.message });
+  }
+
   if (error instanceof AppError) {
     return reply.status(error.statusCode).send({ message: error.message });
+  }
+
+  if (error instanceof AxiosError) {
+    return reply.status(error.status || 500).send({ message: error.message });
   }
 
   return reply

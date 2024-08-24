@@ -1,56 +1,92 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { prisma } from '../utils';
-import { ERRORS, handleServerError } from '../helpers/errors.helper';
+import { AppError, ERRORS, handleServerError } from '../helpers/errors.helper';
 import * as JWT from 'jsonwebtoken';
 import { utils } from '../utils';
 import { STANDARD } from '../constants/request';
-import { LoginSchema, UserResponseSchema } from '../schemas/User';
+import {
+  LoginSchema,
+  TokenDataSchema,
+  UserResponseSchema,
+} from '../schemas/User';
 import {
   IRequestIdParamSchema,
   PaginationRequestSchema,
-  PaginationSchema,
 } from '../schemas/Utils';
+import { SuapAPI } from '../services/suap';
+import { Department } from '@prisma/client';
 
 const SALT_ROUNDS = 10;
 
 export const login = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
     const { registration, password } = LoginSchema.parse(request.body);
-    const user = await prisma.user.findUnique({ where: { registration } });
-    if (!user) {
-      // const hashPass = await utils.genSalt(10, password);
-      // const createUser = await prisma.user.create({
-      //   data: {
-      //     registration,
-      //     first_name: firstName.trim(),
-      //     last_name: lastName.trim(),
-      //     password: String(hashPass),
-      //   },
-      // });
 
-      return reply
-        .code(ERRORS.userNotExists.statusCode)
-        .send('Não existe um usuário com essa matrícula');
+    const suap = new SuapAPI(registration, password);
+    await suap.authenticate();
+    const suapUser = await suap.getUserData();
+
+    if (suapUser.vinculo.situacao !== 'Matriculado') {
+      throw new AppError(
+        'Você não tem permissão',
+        ERRORS.unauthorizedAccess.statusCode,
+      );
     }
 
-    const checkPass = await utils.compareHash(password, user.password);
+    let user = await prisma.user.findUnique({
+      where: { registration },
+      include: { campus: true },
+    });
+    if (!user) {
+      const hashPass = await utils.genSalt(SALT_ROUNDS, password);
+
+      const isEmployeeUser =
+        suapUser.vinculo?.setor_suap != null &&
+        (suapUser.vinculo?.setor_suap.includes('COAPAC') ||
+          suapUser.vinculo?.setor_suap.includes('COADES'));
+
+      if (suapUser.tipo_vinculo !== 'Aluno' && !isEmployeeUser) {
+        throw new AppError(
+          'Seu cargo não tem acesso as funcionalidades do sistema',
+          ERRORS.unauthorizedAccess.statusCode,
+        );
+      }
+
+      const campus = await prisma.campus.findUniqueOrThrow({
+        where: {
+          acronym: suapUser.vinculo.campus,
+        },
+      });
+
+      const payload = {
+        registration,
+        name: suapUser.nome_usual,
+        department: isEmployeeUser ? Department.EMPLOYEE : Department.STUDENT,
+        picture: suapUser.url_foto_150x200,
+        email: suapUser.email,
+        password: String(hashPass),
+        campusId: campus.id,
+      };
+
+      user = await prisma.user.create({
+        data: payload,
+        include: { campus: true },
+      });
+    }
+
+    const checkPass = await utils.compareHash(user.password, password);
     if (!checkPass) {
-      return reply
-        .code(ERRORS.userCredError.statusCode)
-        .send('A senha inserida está incorreta');
+      throw new AppError('Senha incorreta', ERRORS.userCredError.statusCode);
     }
 
     const token = JWT.sign(
-      {
-        id: user.id,
-        registration: user.registration,
-      },
+      TokenDataSchema.parse(user),
       process.env.APP_JWT_SECRET as string,
     );
 
     return reply.code(STANDARD.OK.statusCode).send({
       token,
-      user,
+      user: UserResponseSchema.parse(user),
     });
   } catch (err) {
     return handleServerError(reply, err);
@@ -96,89 +132,37 @@ export const listScholarshipStudents = async (
   }
 };
 
-export const removeScholarshipStudent = async (
+export const toggleStudentPermissionAsScholarshipStudent = async (
   request: FastifyRequest,
   reply: FastifyReply,
 ) => {
   try {
     const { id } = request.params as IRequestIdParamSchema;
-    await prisma.user.delete({
+    const student = await prisma.user.findUniqueOrThrow({
       where: {
         id,
       },
     });
 
-    return reply.code(STANDARD.NO_CONTENT.statusCode).send();
+    if (student.department !== 'STUDENT')
+      throw new AppError(
+        'Não é possível tornar esse usuário como bolsista do sistema',
+        400,
+      );
+
+    const updatedStudent = await prisma.user.update({
+      where: {
+        id,
+      },
+      data: {
+        isScholarshipHolder: !student.isScholarshipHolder,
+      },
+    });
+
+    return reply
+      .code(STANDARD.OK.statusCode)
+      .send(UserResponseSchema.parse(updatedStudent));
   } catch (err) {
     return handleServerError(reply, err);
   }
 };
-
-// export const signUp = async (
-//   request: FastifyRequest<{
-//     Body: IUserSignupDto;
-//   }>,
-//   reply: FastifyReply,
-// ) => {
-//   try {
-//     const { email, password, firstName, lastName } = request.body;
-//     const user = await prisma.user.findUnique({ where: { email } });
-//     if (user) {
-//       return reply.code(ERRORS.userExists.statusCode).send(ERRORS.userExists);
-//     }
-
-//     const hashPass = await utils.genSalt(10, password);
-//     const createUser = await prisma.user.create({
-//       data: {
-//         email,
-//         first_name: firstName.trim(),
-//         last_name: lastName.trim(),
-//         password: String(hashPass),
-//       },
-//     });
-
-//     const token = JWT.sign(
-//       {
-//         id: createUser.id,
-//         email: createUser.email,
-//       },
-//       process.env.APP_JWT_SECRET as string,
-//     );
-
-//     delete createUser.password;
-
-//     return reply.code(STANDARD.OK.statusCode).send({
-//       token,
-//       user: createUser,
-//     });
-//   } catch (err) {
-//     return handleServerError(reply, err);
-//   }
-// };
-
-// const createUser = async () => {
-//   const { password, email, name } = req.body;
-//   const user = await prisma.user.findUnique({
-//     where: {
-//       email: email,
-//     },
-//   });
-//   if (user) {
-//     return reply.code(401).send({
-//       message: 'Usuário com este e-mail já existe',
-//     });
-//   }
-//   try {
-//     const hash = await bcrypt.hash(password, SALT_ROUNDS);
-//     const user = await prisma.user.create({
-//       data: {
-//         password: hash,
-//         email,
-//         name,
-//       },
-//     });
-//     return reply.code(201).send(user);
-//   } catch (e) {
-//     return reply.code(500).send(e);
-//   }
-// };

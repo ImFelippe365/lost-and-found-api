@@ -10,12 +10,22 @@ export const PaginationSchema = <T extends z.ZodTypeAny>(contentType: T) =>
   });
 
 export const PaginationRequestSchema = z.object({
-  page: z.string().transform((value) => Number(value)),
-  size: z.string().transform((value) => Number(value)),
+  page: z
+    .string()
+    .nullish()
+    .transform((value) => (!value ? 1 : Number(value))),
+  size: z
+    .string()
+    .nullish()
+    .transform((value) => (!value ? 10 : Number(value))),
 });
 
 export const RequestIdParamSchema = z.object({
   id: z.string().transform((value) => Number(value)),
+});
+
+export const RequestUUIDParamSchema = z.object({
+  uuid: z.string(),
 });
 
 export interface IPaginationSchema<T extends z.ZodTypeAny>

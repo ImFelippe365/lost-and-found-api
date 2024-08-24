@@ -1,16 +1,15 @@
-import fastify, { FastifyReply, FastifyRequest } from 'fastify';
+import fastify from 'fastify';
 import pino from 'pino';
-import userRouter from './routes/user.router';
 import loadConfig from './config/env.config';
-import { prisma, utils } from './utils';
-import formbody from '@fastify/formbody';
+import { utils } from './utils';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
-import * as JWT from 'jsonwebtoken';
-import itemRouter from './routes/item.router';
+import multipart from '@fastify/multipart';
+import fastifyStatic from '@fastify/static';
+import path from 'node:path';
+import { itemRouter, publicRouter, studentRouter, userRouter } from './routes';
 
 loadConfig();
-
 const port = Number(process.env.API_PORT) || 5001;
 const host = String(process.env.API_HOST);
 
@@ -19,14 +18,18 @@ const startServer = async () => {
     logger: pino({ level: process.env.LOG_LEVEL }),
   });
 
-  // Register middlewares
-  server.register(formbody);
   server.register(cors);
   server.register(helmet);
+  server.register(multipart);
+  server.register(fastifyStatic, {
+    root: path.join(__dirname, '../public'),
+    prefix: '/public',
+  });
 
-  // Register routes
   server.register(userRouter, { prefix: '/api/users' });
   server.register(itemRouter, { prefix: '/api/items' });
+  server.register(publicRouter, { prefix: '/api/public' });
+  server.register(studentRouter, { prefix: '/api/students' });
 
   // Set error handler
   server.setErrorHandler((error, _request, reply) => {

@@ -5,12 +5,14 @@ model Item {
   description        String?
   foundBy            String?
   foundLocation      String?
-  foundDate          DateTime
-  image              String?
+  foundDate          DateTime     @db.Date
+  imageId            Int?
+  image              Image?       @relation(fields: [imageId], references: [id])
   shift              Shift
-  withdrawalDeadline DateTime
+  withdrawalDeadline DateTime     @db.Date
   pickupLocation     String?
-  // Ainda precisa adicionar a parte do campus
+  campusId           Int
+  campus             Campus       @relation(fields: [campusId], references: [id])
   userId             Int
   createdBy          User         @relation(fields: [userId], references: [id])
   createdAt          DateTime     @default(now())

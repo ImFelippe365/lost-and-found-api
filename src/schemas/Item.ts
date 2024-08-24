@@ -1,18 +1,25 @@
 import z from 'zod';
+import { CampusSchema } from './Campus';
 
 export const ShiftEnum = z.enum(['MORNING', 'AFTERNOON', 'NIGHT']);
+
+export const ItemPictureSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  filetype: z.string(),
+  path: z.string(),
+  size: z.number(),
+});
 
 export const CreateItemSchema = z.object({
   name: z.string(),
   description: z.string(),
   foundBy: z.string().nullable().optional(),
   foundLocation: z.string().nullable().optional(),
-  foundDate: z.string().date(),
-  image: z.string().nullable().optional(),
+  foundDate: z.string().datetime(),
   shift: ShiftEnum,
-  withdrawalDeadline: z.string().date(),
+  withdrawalDeadline: z.string().datetime(),
   pickupLocation: z.string(),
-  // Ainda precisa adicionar a parte do campus
 });
 
 export const UpdateItemSchema = z.object({
@@ -20,11 +27,15 @@ export const UpdateItemSchema = z.object({
   description: z.string(),
   foundBy: z.string().nullable().optional(),
   foundLocation: z.string().nullable().optional(),
-  foundDate: z.string().date(),
-  image: z.string().nullable().optional(),
+  foundDate: z.string().datetime(),
   shift: ShiftEnum,
-  withdrawalDeadline: z.string().date(),
+  withdrawalDeadline: z.string().datetime(),
   pickupLocation: z.string(),
+});
+
+export const ClaimItemSchema = z.object({
+  name: z.string(),
+  document: z.string().nullish(),
 });
 
 export const ItemResponseSchema = z.object({
@@ -40,4 +51,13 @@ export const ItemResponseSchema = z.object({
   pickupLocation: z.string(),
 });
 
+export const ItemIDRequestParamSchema = z.object({
+  itemId: z.string().transform((value) => Number(value)),
+});
+
 export interface ICreateItemSchema extends z.infer<typeof CreateItemSchema> {}
+export interface IItemPictureSchema extends z.infer<typeof ItemPictureSchema> {}
+
+export interface IItemIDRequestParams {
+  itemId: number;
+}

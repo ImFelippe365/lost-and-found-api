@@ -17,16 +17,17 @@ enum Department {
 }
 
 model User {
-  id                  Int        @id @unique @default(autoincrement()) @map("user_id")
-  registration        String     @unique
+  id                  Int           @id @unique @default(autoincrement()) @map("user_id")
+  registration        String        @unique
   name                String
+  email               String?
   password            String
   department          Department
-  isScholarshipHolder Boolean    @default(false)
-  createdAt           DateTime   @default(now())
+  isScholarshipHolder Boolean       @default(false)
+  createdAt           DateTime      @default(now())
   picture             String
-  // Ainda precisa adicionar a parte do campus
-
-  items        Item[]
-  claimedItems ClaimedItem[]
+  campusId            Int
+  campus              Campus        @relation(fields: [campusId], references: [id])
+  items               Item[]
+  claimedItems        ClaimedItem[]
 }
