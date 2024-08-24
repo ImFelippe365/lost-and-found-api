@@ -106,8 +106,9 @@ export const uploadItemImage = async (
     if (!imageFile) {
       throw new AppError('É preciso passar o arquivo de imagem', 400);
     }
+    const imageType = imageFile.mimetype.split('/')[1];
     const filename = imageFile.filename;
-    const path = `./public/images/${randomUUID()}`;
+    const path = `./public/images/${randomUUID()}.${imageType}`;
 
     await pump(imageFile.file, fs.createWriteStream(path));
 
