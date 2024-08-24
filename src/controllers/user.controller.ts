@@ -5,7 +5,11 @@ import * as JWT from 'jsonwebtoken';
 import { utils } from '../utils';
 import { STANDARD } from '../constants/request';
 import { LoginSchema, UserResponseSchema } from '../schemas/User';
-import { PaginationRequestSchema, PaginationSchema } from '../schemas/Utils';
+import {
+  IRequestIdParamSchema,
+  PaginationRequestSchema,
+  PaginationSchema,
+} from '../schemas/Utils';
 
 const SALT_ROUNDS = 10;
 
@@ -87,6 +91,24 @@ export const listScholarshipStudents = async (
       content: response,
       currentPage,
     });
+  } catch (err) {
+    return handleServerError(reply, err);
+  }
+};
+
+export const removeScholarshipStudent = async (
+  request: FastifyRequest,
+  reply: FastifyReply,
+) => {
+  try {
+    const { id } = request.params as IRequestIdParamSchema;
+    await prisma.user.delete({
+      where: {
+        id,
+      },
+    });
+
+    return reply.code(STANDARD.NO_CONTENT.statusCode).send();
   } catch (err) {
     return handleServerError(reply, err);
   }

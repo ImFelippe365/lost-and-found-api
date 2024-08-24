@@ -14,8 +14,14 @@ export const PaginationRequestSchema = z.object({
   size: z.string().transform((value) => Number(value)),
 });
 
+export const RequestIdParamSchema = z.object({
+  id: z.string().transform((value) => Number(value)),
+});
+
 export interface IPaginationSchema<T extends z.ZodTypeAny>
   extends z.infer<ReturnType<typeof PaginationSchema<T>>> {}
 
 export interface IPaginationRequestSchema
   extends z.infer<typeof PaginationRequestSchema> {}
+export interface IRequestIdParamSchema
+  extends z.infer<typeof RequestIdParamSchema> {}

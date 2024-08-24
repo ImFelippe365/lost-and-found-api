@@ -1,24 +1,24 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { prisma } from '../utils';
 import { ERRORS, handleServerError } from '../helpers/errors.helper';
-import * as JWT from 'jsonwebtoken';
-import { utils } from '../utils';
 import { STANDARD } from '../constants/request';
 import {
   CreateItemSchema,
-  ICreateItemSchema,
   ItemResponseSchema,
   UpdateItemSchema,
 } from '../schemas/Item';
-import { IRequestParams } from 'src/types/types';
+import { ISecureRequest } from '../types';
+import { User } from '@prisma/client';
+import { IRequestIdParamSchema } from '../schemas/Utils';
 
 export const create = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
+    const { user } = request as ISecureRequest;
     const payload = CreateItemSchema.parse(request.body);
     const createdItem = await prisma.item.create({
       data: {
         ...payload,
-        userId: request?.user.id,
+        userId: user.id,
       },
     });
 
@@ -32,7 +32,7 @@ export const create = async (request: FastifyRequest, reply: FastifyReply) => {
 
 export const update = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
-    const { id } = request.params as IRequestParams;
+    const { id } = request.params as IRequestIdParamSchema;
     const payload = UpdateItemSchema.parse(request.body);
     const updatedItem = await prisma.item.update({
       where: {
@@ -51,7 +51,7 @@ export const update = async (request: FastifyRequest, reply: FastifyReply) => {
 
 export const remove = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
-    const { id } = request.params as IRequestParams;
+    const { id } = request.params as IRequestIdParamSchema;
 
     await prisma.item.delete({
       where: {

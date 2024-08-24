@@ -14,10 +14,12 @@
     "paths": {
       "config/*": ["config/*"]
     },
-    "types": ["node", "jest"],
-    "strict": true
+    "types": ["node"],
+    "strict": true,
+    "noEmit": false,
+    "noEmitOnError": false,
+    "typeRoots": ["./src/types", "./node_modules/@types"]
   },
-  "include": ["src", "test"],
-  "exclude": ["node_modules", "dist", "coverage", "prisma"],
-  "files": ["fastify.d.ts"]
+  "include": [],
+  "exclude": ["node_modules", "dist", "coverage", "prisma"]
 }

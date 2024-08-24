@@ -60,7 +60,9 @@ export const utils = {
 
   verifyToken: (token: string) => {
     try {
-      return JWT.verify(token, process.env.APP_JWT_SECRET as string);
+      const decoded = JWT.verify(token, process.env.APP_JWT_SECRET as string);
+
+      return decoded as JWT.JwtPayload;
     } catch (err) {
       return null;
     }
