@@ -3,6 +3,7 @@ import { prisma, utils } from '../utils';
 import { AppError, handleServerError } from '../helpers/errors.helper';
 import { STANDARD } from '../constants/request';
 import {
+  ClaimItemSchema,
   CreateItemSchema,
   ItemIDRequestParamSchema,
   ItemResponseSchema,
@@ -18,6 +19,7 @@ import { pipeline } from 'stream';
 
 import util from 'node:util';
 import { randomUUID } from 'node:crypto';
+import { ItemStatus } from '@prisma/client';
 
 const pump = util.promisify(pipeline);
 
@@ -230,11 +232,13 @@ export const claimItem = async (
   reply: FastifyReply,
 ) => {
   try {
-    const { id } = request.params as IRequestIdParamSchema;
+    const { user } = request as ISecureRequest;
+    const { itemId } = ItemIDRequestParamSchema.parse(request.params);
+    const claimantData = ClaimItemSchema.parse(request.body);
 
     const item = await prisma.item.findFirstOrThrow({
       where: {
-        id,
+        id: itemId,
       },
     });
 
@@ -242,9 +246,35 @@ export const claimItem = async (
       throw new AppError('Você não pode remover um item expirado', 400);
     }
 
-    await prisma.item.delete({
+    let claimant = await prisma.claimant.findFirst({
       where: {
-        id,
+        document: claimantData.document,
+      },
+    });
+
+    if (!claimant) {
+      claimant = await prisma.claimant.create({
+        data: {
+          name: claimantData.name,
+          document: claimantData.document,
+        },
+      });
+    }
+
+    await prisma.claimedItem.create({
+      data: {
+        itemId,
+        claimantId: claimant.id,
+        userId: user.id,
+      },
+    });
+
+    await prisma.item.update({
+      where: {
+        id: itemId,
+      },
+      data: {
+        status: ItemStatus.CLAIMED,
       },
     });
 

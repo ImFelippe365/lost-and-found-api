@@ -1,6 +1,6 @@
 model Image {
   id       Int    @id @unique @default(autoincrement()) @map("campus_id")
-  uuid     String @default(uuid()) @db.Uuid @unique
+  uuid     String @unique @default(uuid()) @db.Uuid
   name     String
   filetype String
   path     String

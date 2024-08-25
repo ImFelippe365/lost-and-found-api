@@ -47,6 +47,6 @@ enum Shift {
 
 enum ItemStatus {
   LOST
-  DELIVERED
+  CLAIMED
   EXPIRED
 }

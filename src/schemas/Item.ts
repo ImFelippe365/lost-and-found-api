@@ -35,7 +35,7 @@ export const UpdateItemSchema = z.object({
 
 export const ClaimItemSchema = z.object({
   name: z.string(),
-  document: z.string().nullish(),
+  document: z.string(),
 });
 
 export const ItemResponseSchema = z.object({
