@@ -8,6 +8,7 @@ import multipart from '@fastify/multipart';
 import fastifyStatic from '@fastify/static';
 import path from 'node:path';
 import { itemRouter, publicRouter, studentRouter, userRouter } from './routes';
+import { authRouter } from './routes/auth.router';
 
 loadConfig();
 const port = Number(process.env.API_PORT) || 5001;
@@ -19,16 +20,17 @@ const startServer = async () => {
   });
 
   server.register(cors);
-  server.register(helmet);
+  // server.register(helmet);
   server.register(multipart);
   server.register(fastifyStatic, {
     root: path.join(__dirname, '../public'),
     prefix: '/public',
   });
 
+  server.register(authRouter, { prefix: '/api/auth' });
   server.register(userRouter, { prefix: '/api/users' });
   server.register(itemRouter, { prefix: '/api/items' });
-  server.register(publicRouter, { prefix: '/api/public' });
+  // server.register(publicRouter, { prefix: '/api/public' });
   server.register(studentRouter, { prefix: '/api/students' });
 
   // Set error handler

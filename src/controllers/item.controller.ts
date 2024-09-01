@@ -6,6 +6,7 @@ import {
   ClaimItemSchema,
   CreateItemSchema,
   ItemIDRequestParamSchema,
+  ItemQueriesSchema,
   ItemResponseSchema,
   UpdateItemSchema,
 } from '../schemas/Item';
@@ -29,12 +30,19 @@ export const listPageable = async (
 ) => {
   try {
     const { user } = request as ISecureRequest;
+    const queries = ItemQueriesSchema.parse(request.query);
     const { page, size } = PaginationRequestSchema.parse(request.query);
 
     const totalContentCount = (+page - 1) * +size;
 
     const items = await prisma.item.findMany({
-      where: { campusId: user.campusId },
+      where: {
+        campusId: user.campusId,
+        name: {
+          mode: 'insensitive',
+          contains: !queries.name ? undefined : queries.name,
+        },
+      },
       take: size,
       skip: totalContentCount,
       include: {

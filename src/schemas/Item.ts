@@ -1,7 +1,7 @@
 import z from 'zod';
-import { CampusSchema } from './Campus';
 
 export const ShiftEnum = z.enum(['MORNING', 'AFTERNOON', 'NIGHT']);
+export const ItemStatusEnum = z.enum(['LOST', 'CLAIMED', 'EXPIRED']);
 
 export const ItemPictureSchema = z.object({
   id: z.number(),
@@ -41,6 +41,7 @@ export const ClaimItemSchema = z.object({
 export const ItemResponseSchema = z.object({
   id: z.number().int(),
   name: z.string(),
+  status: ItemStatusEnum,
   description: z.string(),
   foundBy: z.string().nullable(),
   foundLocation: z.string().nullable(),
@@ -53,6 +54,10 @@ export const ItemResponseSchema = z.object({
 
 export const ItemIDRequestParamSchema = z.object({
   itemId: z.string().transform((value) => Number(value)),
+});
+
+export const ItemQueriesSchema = z.object({
+  name: z.string().optional(),
 });
 
 export interface ICreateItemSchema extends z.infer<typeof CreateItemSchema> {}
