@@ -1,7 +1,9 @@
 import z from 'zod';
+import { UserResponseSchema } from './User';
 
 export const ShiftEnum = z.enum(['MORNING', 'AFTERNOON', 'NIGHT']);
 export const ItemStatusEnum = z.enum(['LOST', 'CLAIMED', 'EXPIRED']);
+export const ItemOrderEnum = z.enum(['asc', 'desc']);
 
 export const ItemPictureSchema = z.object({
   id: z.number(),
@@ -13,13 +15,14 @@ export const ItemPictureSchema = z.object({
 
 export const CreateItemSchema = z.object({
   name: z.string(),
-  description: z.string(),
+  description: z.string().nullable().optional(),
   foundBy: z.string().nullable().optional(),
   foundLocation: z.string().nullable().optional(),
   foundDate: z.string().datetime(),
   shift: ShiftEnum,
   withdrawalDeadline: z.string().datetime(),
   pickupLocation: z.string(),
+  image: z.any().optional(),
 });
 
 export const UpdateItemSchema = z.object({
@@ -38,18 +41,48 @@ export const ClaimItemSchema = z.object({
   document: z.string(),
 });
 
+export const ClaimantSchema = z.object({
+  id: z.number().int(),
+  name: z.string(),
+  document: z.string(),
+});
+
 export const ItemResponseSchema = z.object({
   id: z.number().int(),
   name: z.string(),
   status: ItemStatusEnum,
-  description: z.string(),
+  description: z.string().nullable().optional(),
   foundBy: z.string().nullable(),
   foundLocation: z.string().nullable(),
   foundDate: z.date(),
-  image: z.string().nullable(),
+  image: z.string().nullable().optional(),
   shift: ShiftEnum,
   withdrawalDeadline: z.date(),
   pickupLocation: z.string(),
+});
+
+export const ClaimedItemSchema = z.object({
+  id: z.number().int(),
+  user: UserResponseSchema,
+  claimant: ClaimantSchema,
+  withdrawalDate: z.date(),
+});
+
+export const ItemDetailedResponseSchema = z.object({
+  id: z.number().int(),
+  name: z.string(),
+  status: ItemStatusEnum,
+  description: z.string().nullable().optional(),
+  foundBy: z.string().nullable(),
+  foundLocation: z.string().nullable(),
+  foundDate: z.date(),
+  image: z.string().nullable().optional(),
+  shift: ShiftEnum,
+  withdrawalDeadline: z.date(),
+  pickupLocation: z.string(),
+  createdBy: UserResponseSchema,
+  claimedBy: ClaimedItemSchema.nullable().optional(),
+  createdAt: z.date(),
 });
 
 export const ItemIDRequestParamSchema = z.object({
@@ -58,6 +91,8 @@ export const ItemIDRequestParamSchema = z.object({
 
 export const ItemQueriesSchema = z.object({
   name: z.string().optional(),
+  status: ItemStatusEnum.optional(),
+  orderNameBy: ItemOrderEnum.optional(),
 });
 
 export interface ICreateItemSchema extends z.infer<typeof CreateItemSchema> {}

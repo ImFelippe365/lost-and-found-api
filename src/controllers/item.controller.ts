@@ -5,6 +5,7 @@ import { STANDARD } from '../constants/request';
 import {
   ClaimItemSchema,
   CreateItemSchema,
+  ItemDetailedResponseSchema,
   ItemIDRequestParamSchema,
   ItemQueriesSchema,
   ItemResponseSchema,
@@ -21,6 +22,7 @@ import { pipeline } from 'stream';
 import util from 'node:util';
 import { randomUUID } from 'node:crypto';
 import { ItemStatus } from '@prisma/client';
+import { ReadableStream } from 'node:stream/web';
 
 const pump = util.promisify(pipeline);
 
@@ -30,7 +32,9 @@ export const listPageable = async (
 ) => {
   try {
     const { user } = request as ISecureRequest;
-    const queries = ItemQueriesSchema.parse(request.query);
+    const { name, orderNameBy, status } = ItemQueriesSchema.parse(
+      request.query,
+    );
     const { page, size } = PaginationRequestSchema.parse(request.query);
 
     const totalContentCount = (+page - 1) * +size;
@@ -40,8 +44,12 @@ export const listPageable = async (
         campusId: user.campusId,
         name: {
           mode: 'insensitive',
-          contains: !queries.name ? undefined : queries.name,
+          contains: name,
         },
+        status: status,
+      },
+      orderBy: {
+        name: orderNameBy,
       },
       take: size,
       skip: totalContentCount,
@@ -85,11 +93,18 @@ export const listById = async (
 ) => {
   try {
     const { user } = request as ISecureRequest;
-    const id = 0;
+    const { itemId } = ItemIDRequestParamSchema.parse(request.params);
 
     const item = await prisma.item.findUniqueOrThrow({
-      where: { id, campusId: user.campusId },
+      where: { id: itemId, campusId: user.campusId },
       include: {
+        ClaimedItem: {
+          include: {
+            claimant: true,
+            user: true,
+          },
+        },
+        createdBy: true,
         image: {
           select: {
             path: true,
@@ -98,9 +113,12 @@ export const listById = async (
       },
     });
 
-    return reply
-      .code(STANDARD.OK.statusCode)
-      .send(ItemResponseSchema.parse(item));
+    return reply.code(STANDARD.OK.statusCode).send(
+      ItemDetailedResponseSchema.parse({
+        ...item,
+        claimedBy: item.ClaimedItem,
+      }),
+    );
   } catch (err) {
     return handleServerError(reply, err);
   }
@@ -163,15 +181,51 @@ export const uploadItemImage = async (
   }
 };
 
+interface IImageAttachment {
+  fileDataInBase64: ReadableStream;
+  name: string;
+  type: string;
+}
+
 export const create = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
     const { user } = request as ISecureRequest;
     const payload = CreateItemSchema.parse(request.body);
+
+    let createdImage;
+    if (payload?.image) {
+      const imageFile = payload?.image as IImageAttachment;
+      const imageType = imageFile.type.split('/')[1];
+      const filename = imageFile.name;
+      const path = `./public/images/${randomUUID()}.${imageType}`;
+      fs.writeFileSync(
+        path,
+        Buffer.from(
+          `${imageFile.fileDataInBase64}`.replace(
+            /^data:image\/\w+;base64,/,
+            '',
+          ),
+          'base64',
+        ),
+      );
+      // await pump(imageFile.fileDataInBase64, fs.createWriteStream(path));
+
+      createdImage = await prisma.image.create({
+        data: {
+          name: filename,
+          filetype: imageFile.type,
+          path: path.slice(1),
+          size: 0,
+        },
+      });
+    }
+    delete payload?.image;
     const createdItem = await prisma.item.create({
       data: {
         ...payload,
         userId: user.id,
         campusId: user.campusId,
+        imageId: createdImage?.id,
       },
       include: {
         image: {
@@ -182,9 +236,12 @@ export const create = async (request: FastifyRequest, reply: FastifyReply) => {
       },
     });
 
-    return reply
-      .code(STANDARD.OK.statusCode)
-      .send(ItemResponseSchema.parse(createdItem));
+    return reply.code(STANDARD.OK.statusCode).send(
+      ItemResponseSchema.parse({
+        ...createdItem,
+        image: null,
+      }),
+    );
   } catch (err) {
     return handleServerError(reply, err);
   }
@@ -271,7 +328,7 @@ export const claimItem = async (
 
     await prisma.claimedItem.create({
       data: {
-        itemId,
+        itemId: Number(itemId),
         claimantId: claimant.id,
         userId: user.id,
       },
@@ -286,7 +343,7 @@ export const claimItem = async (
       },
     });
 
-    return reply.code(STANDARD.NO_CONTENT.statusCode);
+    return reply.code(STANDARD.NO_CONTENT.statusCode).send();
   } catch (err) {
     return handleServerError(reply, err);
   }

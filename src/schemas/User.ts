@@ -17,7 +17,7 @@ export const UserResponseSchema = z.object({
   isScholarshipHolder: z.boolean(),
   createdAt: z.date(),
   picture: z.string().nullable(),
-  campus: CampusSchema,
+  campus: CampusSchema.nullable().optional(),
 });
 
 export const TokenDataSchema = z.object({

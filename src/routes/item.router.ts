@@ -16,6 +16,14 @@ export async function itemRouter(fastify: FastifyInstance) {
     controllers.listPageable,
   );
 
+  fastify.get(
+    '/:itemId',
+    {
+      preHandler: utils.auth,
+    },
+    controllers.listById,
+  );
+
   fastify.post(
     '/',
     {
