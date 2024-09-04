@@ -348,3 +348,36 @@ export const claimItem = async (
     return handleServerError(reply, err);
   }
 };
+
+export const countItemsPerType = async (
+  request: FastifyRequest,
+  reply: FastifyReply,
+) => {
+  try {
+    const lostItemsCount = await prisma.item.count({
+      where: {
+        status: 'LOST',
+      },
+    });
+
+    const claimedItemsCount = await prisma.item.count({
+      where: {
+        status: 'CLAIMED',
+      },
+    });
+
+    const expiredtemsCount = await prisma.item.count({
+      where: {
+        status: 'EXPIRED',
+      },
+    });
+
+    return reply.code(STANDARD.OK.statusCode).send({
+      lost: lostItemsCount,
+      claimed: claimedItemsCount,
+      expired: expiredtemsCount,
+    });
+  } catch (err) {
+    return handleServerError(reply, err);
+  }
+};

@@ -66,4 +66,6 @@ export async function itemRouter(fastify: FastifyInstance) {
     },
     controllers.uploadItemImage,
   );
+
+  fastify.get('/count', {}, controllers.countItemsPerType);
 }
