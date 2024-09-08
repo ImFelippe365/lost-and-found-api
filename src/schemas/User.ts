@@ -30,6 +30,11 @@ export const TokenResponseSchema = z.object({
   token: z.string(),
 });
 
+export const StudentUserQueryParams = z.object({
+  scholarshipStudent: z.boolean().optional(),
+  search: z.string().optional(),
+});
+
 export interface ILoginSchema extends z.infer<typeof LoginSchema> {}
 export interface IUserResponseSchema
   extends z.infer<typeof UserResponseSchema> {}

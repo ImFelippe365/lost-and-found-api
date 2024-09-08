@@ -8,13 +8,7 @@ import {
 } from '../schemas/Item';
 
 export async function itemRouter(fastify: FastifyInstance) {
-  fastify.get(
-    '/pageable',
-    {
-      preHandler: utils.auth,
-    },
-    controllers.listPageable,
-  );
+  fastify.get('/pageable', {}, controllers.listPageable);
 
   fastify.get(
     '/:itemId',

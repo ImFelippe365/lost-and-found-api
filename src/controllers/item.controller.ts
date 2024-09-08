@@ -5,6 +5,7 @@ import { STANDARD } from '../constants/request';
 import {
   ClaimItemSchema,
   CreateItemSchema,
+  IItemIDRequestParams,
   ItemDetailedResponseSchema,
   ItemIDRequestParamSchema,
   ItemQueriesSchema,
@@ -41,7 +42,7 @@ export const listPageable = async (
 
     const items = await prisma.item.findMany({
       where: {
-        campusId: user.campusId,
+        campusId: user?.campusId,
         name: {
           mode: 'insensitive',
           contains: name,
@@ -63,7 +64,7 @@ export const listPageable = async (
     });
 
     const totalItemsCount = await prisma.item.count({
-      where: { campusId: user.campusId },
+      where: { campusId: user?.campusId },
     });
 
     const totalPages = Math.ceil(totalItemsCount / size);
@@ -249,11 +250,11 @@ export const create = async (request: FastifyRequest, reply: FastifyReply) => {
 
 export const update = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
-    const { id } = request.params as IRequestIdParamSchema;
+    const { itemId } = request.params as IItemIDRequestParams;
     const payload = UpdateItemSchema.parse(request.body);
     const updatedItem = await prisma.item.update({
       where: {
-        id: Number(id),
+        id: Number(itemId),
       },
       data: payload,
     });
