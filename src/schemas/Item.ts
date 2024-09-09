@@ -84,6 +84,7 @@ export const ItemDetailedResponseSchema = z.object({
   claimedBy: ClaimedItemSchema.nullable().optional(),
   createdAt: z.date(),
   image: ImageFileSchema.optional(),
+  imagePath: z.string().optional(),
 });
 
 export const ItemIDRequestParamSchema = z.object({

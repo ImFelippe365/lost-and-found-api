@@ -130,6 +130,7 @@ export const listById = async (
         ...item,
         claimedBy: item.ClaimedItem,
         image: imageToInclude,
+        imagePath: item.image?.path,
       }),
     );
   } catch (err) {
