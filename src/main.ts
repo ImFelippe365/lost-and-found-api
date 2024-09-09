@@ -7,7 +7,7 @@ import helmet from '@fastify/helmet';
 import multipart from '@fastify/multipart';
 import fastifyStatic from '@fastify/static';
 import path from 'node:path';
-import { itemRouter, publicRouter, studentRouter, userRouter } from './routes';
+import { itemRouter, studentRouter, userRouter } from './routes';
 import { authRouter } from './routes/auth.router';
 
 loadConfig();

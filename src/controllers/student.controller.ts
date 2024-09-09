@@ -6,6 +6,7 @@ import { StudentUserQueryParams, UserResponseSchema } from '../schemas/User';
 import {
   IRequestIdParamSchema,
   PaginationRequestSchema,
+  RequestIdParamSchema,
 } from '../schemas/Utils';
 
 export const listStudents = async (
@@ -102,7 +103,7 @@ export const toggleStudentPermissionAsScholarshipStudent = async (
   reply: FastifyReply,
 ) => {
   try {
-    const { id } = request.params as IRequestIdParamSchema;
+    const { id } = RequestIdParamSchema.parse(request.params);
     const student = await prisma.user.findUniqueOrThrow({
       where: {
         id,

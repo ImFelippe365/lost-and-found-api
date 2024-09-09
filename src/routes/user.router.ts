@@ -1,6 +1,13 @@
 import { FastifyInstance } from 'fastify';
-import * as controllers from '../controllers';
+import * as controllers from './../controllers';
 import { utils } from '../utils';
-import { PaginationRequestSchema } from '../schemas/Utils';
 
-export async function userRouter(fastify: FastifyInstance) {}
+export async function userRouter(fastify: FastifyInstance) {
+  fastify.get(
+    '/:id',
+    {
+      preHandler: utils.auth,
+    },
+    controllers.getUserById,
+  );
+}

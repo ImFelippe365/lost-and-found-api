@@ -31,8 +31,17 @@ export const TokenResponseSchema = z.object({
 });
 
 export const StudentUserQueryParams = z.object({
-  scholarshipStudent: z.boolean().optional(),
+  scholarshipStudent: z
+    .string()
+    .optional()
+    .transform((val) => (val ? Boolean(val) : undefined)),
   search: z.string().optional(),
+});
+
+export const ImageFileSchema = z.object({
+  fileDataInBase64: z.string(),
+  name: z.string(),
+  type: z.string(),
 });
 
 export interface ILoginSchema extends z.infer<typeof LoginSchema> {}
@@ -43,3 +52,4 @@ export interface ITokenDataSchema extends z.infer<typeof TokenDataSchema> {}
 
 export interface ITokenResponseSchema
   extends z.infer<typeof TokenResponseSchema> {}
+export interface IImageFileSchema extends z.infer<typeof ImageFileSchema> {}

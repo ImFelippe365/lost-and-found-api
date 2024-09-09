@@ -5,7 +5,7 @@ import { PaginationRequestSchema } from '../schemas/Utils';
 
 export async function studentRouter(fastify: FastifyInstance) {
   fastify.patch(
-    '/:studentId/scholarship/toggle',
+    '/:id/scholarship/toggle',
     {
       preHandler: utils.auth,
     },

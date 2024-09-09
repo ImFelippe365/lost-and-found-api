@@ -24,6 +24,8 @@ import util from 'node:util';
 import { randomUUID } from 'node:crypto';
 import { ItemStatus } from '@prisma/client';
 import { ReadableStream } from 'node:stream/web';
+import { IImageFileSchema } from 'src/schemas/User';
+import path from 'node:path';
 
 const pump = util.promisify(pipeline);
 
@@ -106,18 +108,28 @@ export const listById = async (
           },
         },
         createdBy: true,
-        image: {
-          select: {
-            path: true,
-          },
-        },
+        image: true,
       },
     });
+
+    let imageToInclude;
+    if (item?.imageId) {
+      const filePath = path.join(path.resolve(), item?.image?.path || '');
+      const fileBuffer = fs.readFileSync(filePath);
+
+      const imageBase64 = fileBuffer.toString('base64');
+      imageToInclude = {
+        fileDataInBase64: imageBase64,
+        name: item.image?.name.split('.')[0],
+        type: item.image?.filetype,
+      } as IImageFileSchema;
+    }
 
     return reply.code(STANDARD.OK.statusCode).send(
       ItemDetailedResponseSchema.parse({
         ...item,
         claimedBy: item.ClaimedItem,
+        image: imageToInclude,
       }),
     );
   } catch (err) {
@@ -183,7 +195,7 @@ export const uploadItemImage = async (
 };
 
 interface IImageAttachment {
-  fileDataInBase64: ReadableStream;
+  fileDataInBase64: string;
   name: string;
   type: string;
 }
@@ -199,17 +211,9 @@ export const create = async (request: FastifyRequest, reply: FastifyReply) => {
       const imageType = imageFile.type.split('/')[1];
       const filename = imageFile.name;
       const path = `./public/images/${randomUUID()}.${imageType}`;
-      fs.writeFileSync(
-        path,
-        Buffer.from(
-          `${imageFile.fileDataInBase64}`.replace(
-            /^data:image\/\w+;base64,/,
-            '',
-          ),
-          'base64',
-        ),
-      );
-      // await pump(imageFile.fileDataInBase64, fs.createWriteStream(path));
+      const buffer = Buffer.from(imageFile?.fileDataInBase64, 'base64');
+
+      fs.writeFileSync(path, buffer);
 
       createdImage = await prisma.image.create({
         data: {
@@ -250,13 +254,65 @@ export const create = async (request: FastifyRequest, reply: FastifyReply) => {
 
 export const update = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
-    const { itemId } = request.params as IItemIDRequestParams;
+    const { itemId } = ItemIDRequestParamSchema.parse(request.params);
     const payload = UpdateItemSchema.parse(request.body);
+
+    const item = await prisma.item.findUniqueOrThrow({
+      where: {
+        id: itemId,
+      },
+      include: {
+        image: true,
+      },
+    });
+
+    if (item.imageId) {
+      const imagePath = path.join(path.resolve(), item?.image?.path || '');
+      fs.unlink(imagePath as string, async function () {
+        await prisma.image.delete({
+          where: { id: item.imageId || 0 },
+        });
+      });
+    }
+
+    let updatedImage;
+    if (payload?.image) {
+      const imageFile = payload?.image as IImageAttachment;
+      const imageType = imageFile.type.split('/')[1];
+      const filename = imageFile.name;
+      const path = `./public/images/${randomUUID()}.${imageType}`;
+      const buffer = Buffer.from(imageFile?.fileDataInBase64, 'base64');
+
+      fs.writeFileSync(path, buffer);
+
+      if (item.imageId) {
+        updatedImage = await prisma.image.update({
+          data: {
+            name: filename,
+            filetype: imageFile.type,
+            path: path.slice(1),
+            size: 0,
+          },
+          where: { id: item.imageId },
+        });
+      } else {
+        updatedImage = await prisma.image.create({
+          data: {
+            name: filename,
+            filetype: imageFile.type,
+            path: path.slice(1),
+            size: 0,
+          },
+        });
+      }
+    }
+
+    delete payload.image;
     const updatedItem = await prisma.item.update({
       where: {
-        id: Number(itemId),
+        id: itemId,
       },
-      data: payload,
+      data: { ...payload, imageId: updatedImage?.id },
     });
 
     return reply
@@ -269,11 +325,11 @@ export const update = async (request: FastifyRequest, reply: FastifyReply) => {
 
 export const remove = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
-    const { id } = request.params as IRequestIdParamSchema;
+    const { itemId } = ItemIDRequestParamSchema.parse(request.params);
 
-    const item = await prisma.item.findFirstOrThrow({
+    const item = await prisma.item.findUniqueOrThrow({
       where: {
-        id,
+        id: itemId,
       },
     });
 
@@ -283,11 +339,11 @@ export const remove = async (request: FastifyRequest, reply: FastifyReply) => {
 
     await prisma.item.delete({
       where: {
-        id,
+        id: itemId,
       },
     });
 
-    return reply.code(STANDARD.NO_CONTENT.statusCode);
+    return reply.code(STANDARD.NO_CONTENT.statusCode).send();
   } catch (err) {
     return handleServerError(reply, err);
   }

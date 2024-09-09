@@ -1,5 +1,5 @@
 import z from 'zod';
-import { UserResponseSchema } from './User';
+import { ImageFileSchema, UserResponseSchema } from './User';
 
 export const ShiftEnum = z.enum(['MORNING', 'AFTERNOON', 'NIGHT']);
 export const ItemStatusEnum = z.enum(['LOST', 'CLAIMED', 'EXPIRED']);
@@ -34,6 +34,7 @@ export const UpdateItemSchema = z.object({
   shift: ShiftEnum,
   withdrawalDeadline: z.string().datetime(),
   pickupLocation: z.string(),
+  image: z.any().optional(),
 });
 
 export const ClaimItemSchema = z.object({
@@ -76,13 +77,13 @@ export const ItemDetailedResponseSchema = z.object({
   foundBy: z.string().nullable(),
   foundLocation: z.string().nullable(),
   foundDate: z.date(),
-  image: z.string().nullable().optional(),
   shift: ShiftEnum,
   withdrawalDeadline: z.date(),
   pickupLocation: z.string(),
   createdBy: UserResponseSchema,
   claimedBy: ClaimedItemSchema.nullable().optional(),
   createdAt: z.date(),
+  image: ImageFileSchema.optional(),
 });
 
 export const ItemIDRequestParamSchema = z.object({
