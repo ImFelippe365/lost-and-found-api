@@ -9,6 +9,7 @@ import fastifyStatic from '@fastify/static';
 import path from 'node:path';
 import { itemRouter, studentRouter, userRouter } from './routes';
 import { authRouter } from './routes/auth.router';
+import { campusRouter } from './routes/campus.router';
 
 loadConfig();
 const port = Number(process.env.API_PORT) || 5001;
@@ -32,6 +33,7 @@ const startServer = async () => {
   server.register(itemRouter, { prefix: '/api/items' });
   // server.register(publicRouter, { prefix: '/api/public' });
   server.register(studentRouter, { prefix: '/api/students' });
+  server.register(campusRouter, { prefix: '/api/campi' });
 
   // Set error handler
   server.setErrorHandler((error, _request, reply) => {

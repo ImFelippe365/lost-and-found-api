@@ -95,6 +95,10 @@ export const ItemQueriesSchema = z.object({
   name: z.string().optional(),
   status: ItemStatusEnum.optional(),
   orderNameBy: ItemOrderEnum.optional(),
+  campusId: z
+    .string()
+    .transform((value) => Number(value))
+    .optional(),
 });
 
 export interface ICreateItemSchema extends z.infer<typeof CreateItemSchema> {}

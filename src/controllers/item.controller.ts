@@ -35,7 +35,7 @@ export const listPageable = async (
 ) => {
   try {
     const { user } = request as ISecureRequest;
-    const { name, orderNameBy, status } = ItemQueriesSchema.parse(
+    const { name, orderNameBy, status, campusId } = ItemQueriesSchema.parse(
       request.query,
     );
     const { page, size } = PaginationRequestSchema.parse(request.query);
@@ -44,7 +44,7 @@ export const listPageable = async (
 
     const items = await prisma.item.findMany({
       where: {
-        campusId: user?.campusId,
+        campusId: user?.campusId || campusId,
         name: {
           mode: 'insensitive',
           contains: name,
@@ -66,7 +66,14 @@ export const listPageable = async (
     });
 
     const totalItemsCount = await prisma.item.count({
-      where: { campusId: user?.campusId },
+      where: {
+        campusId: user?.campusId || campusId,
+        name: {
+          mode: 'insensitive',
+          contains: name,
+        },
+        status: status,
+      },
     });
 
     const totalPages = Math.ceil(totalItemsCount / size);
