@@ -11,6 +11,6 @@ RUN npm run db:gen
 
 COPY . .
 
-EXPOSE 5001
+EXPOSE 10000
 
-CMD [ "npm", "run", "start" ]
+CMD [ "npm", "run", "dev" ]
