@@ -11,13 +11,13 @@
     "sourceMap": true,
     "outDir": "./dist",
     "baseUrl": "./",
+    "types": ["node"],
     "paths": {
       "config/*": ["config/*"]
     },
     "strict": true,
     "noEmit": false,
     "noEmitOnError": false,
-    "typeRoots": ["./src/types", "./node_modules/@types"]
   },
   "exclude": ["node_modules", "dist", "coverage", "prisma"]
 }
