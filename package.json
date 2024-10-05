@@ -1,10 +1,13 @@
 {
   "name": "lost-and-found-api",
   "version": "1.0.0",
-  "author": "hmake98",
+  "author": "Felippe",
   "license": "MIT",
-  "description": "Fastify typescript starter boilerplate",
+  "description": "Manage items inside your college",
   "main": "main.js",
+  "engines": {
+    "node": "18"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "start": "node dist/main.js",
