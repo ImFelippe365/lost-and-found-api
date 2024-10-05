@@ -14,7 +14,6 @@
     "paths": {
       "config/*": ["config/*"]
     },
-    "types": ["node"],
     "strict": true,
     "noEmit": false,
     "noEmitOnError": false,
