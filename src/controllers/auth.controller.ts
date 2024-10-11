@@ -22,7 +22,10 @@ export const login = async (request: FastifyRequest, reply: FastifyReply) => {
     await suap.authenticate();
     const suapUser = await suap.getUserData();
 
-    if (suapUser.vinculo.situacao !== 'Matriculado') {
+    if (
+      suapUser.vinculo.situacao !== 'Matriculado' &&
+      suapUser.vinculo.situacao !== 'Matrícula Vínculo Institucional'
+    ) {
       throw new AppError(
         'Você não tem permissão',
         ERRORS.unauthorizedAccess.statusCode,
