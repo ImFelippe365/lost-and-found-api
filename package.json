@@ -12,6 +12,7 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/main.js",
     "dev": "ts-node-dev ./src/main.ts | pino-pretty --colorize",
+    "seed": "prisma db seed",
     "postinstall": "prisma generate",
     "update:packages": "npx npm-check-updates -u",
     "db:gen": "prisma generate",
