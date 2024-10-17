@@ -1,15 +1,15 @@
 import fastify from 'fastify';
-import pino from 'pino';
+import pino, { levels } from 'pino';
 import loadConfig from './config/env.config';
 import { utils } from './utils';
 import cors from '@fastify/cors';
-import helmet from '@fastify/helmet';
 import multipart from '@fastify/multipart';
 import fastifyStatic from '@fastify/static';
 import path from 'node:path';
 import { itemRouter, studentRouter, userRouter } from './routes';
 import { authRouter } from './routes/auth.router';
 import { campusRouter } from './routes/campus.router';
+import { fastifySchedule } from '@fastify/schedule';
 
 loadConfig();
 const port = Number(process.env.API_PORT) || 5001;
@@ -17,7 +17,7 @@ const host = String(process.env.API_HOST);
 
 const startServer = async () => {
   const server = fastify({
-    logger: pino({ level: process.env.LOG_LEVEL }),
+    logger: {},
   });
 
   server.register(cors);
@@ -27,6 +27,7 @@ const startServer = async () => {
     root: path.join(__dirname, '../public'),
     prefix: '/public',
   });
+  server.register(fastifySchedule);
 
   server.register(authRouter, { prefix: '/api/auth' });
   server.register(userRouter, { prefix: '/api/users' });
@@ -38,7 +39,9 @@ const startServer = async () => {
   // Set error handler
   server.setErrorHandler((error, _request, reply) => {
     server.log.error(error);
-    reply.status(500).send({ error: 'Something went wrong' });
+    reply
+      .status(Number(error.code))
+      .send({ error: error.message || 'Something went wrong' });
   });
 
   // Health check route
