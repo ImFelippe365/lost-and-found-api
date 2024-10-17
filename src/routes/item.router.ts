@@ -6,6 +6,7 @@ import {
   CreateItemSchema,
   UpdateItemSchema,
 } from '../schemas/Item';
+import { resourceLimits } from 'worker_threads';
 
 export async function itemRouter(fastify: FastifyInstance) {
   fastify.get('/pageable', {}, controllers.listPageable);
@@ -23,6 +24,7 @@ export async function itemRouter(fastify: FastifyInstance) {
     {
       preValidation: utils.preBodyValidation(CreateItemSchema),
       preHandler: utils.auth,
+      bodyLimit: 1000000000000,
     },
     controllers.create,
   );
