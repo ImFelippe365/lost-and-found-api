@@ -149,9 +149,16 @@ export const toggleStudentPermissionAsScholarshipStudent = async (
         },
       });
     } else {
-      await prisma.scholarshipHolder.create({
+      await prisma.user.update({
+        where: {
+          id,
+        },
         data: {
-          registration: student.registration,
+          scholarshipHolder: {
+            create: {
+              registration: student.registration,
+            },
+          },
         },
       });
     }

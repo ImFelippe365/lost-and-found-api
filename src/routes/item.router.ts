@@ -6,7 +6,6 @@ import {
   CreateItemSchema,
   UpdateItemSchema,
 } from '../schemas/Item';
-import { resourceLimits } from 'worker_threads';
 
 export async function itemRouter(fastify: FastifyInstance) {
   fastify.get('/pageable', {}, controllers.listPageable);
