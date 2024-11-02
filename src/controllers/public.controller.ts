@@ -1,12 +1,8 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { prisma } from '../utils';
-import { AppError, ERRORS, handleServerError } from '../helpers/errors.helper';
+import { handleServerError } from '../helpers/errors.helper';
 import { STANDARD } from '../constants/request';
-import { UserResponseSchema } from '../schemas/User';
-import {
-  IRequestIdParamSchema,
-  RequestUUIDParamSchema,
-} from '../schemas/Utils';
+import { RequestUUIDParamSchema } from '../schemas/Utils';
 
 export const handleImage = async (
   request: FastifyRequest,

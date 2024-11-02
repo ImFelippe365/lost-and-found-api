@@ -23,7 +23,6 @@ import { pipeline } from 'stream';
 import util from 'node:util';
 import { randomUUID } from 'node:crypto';
 import { ItemStatus } from '@prisma/client';
-import { ReadableStream } from 'node:stream/web';
 import { IImageFileSchema } from 'src/schemas/User';
 import path from 'node:path';
 

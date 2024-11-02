@@ -1,6 +1,6 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { prisma } from '../utils';
-import { handleServerError } from '../helpers/errors.helper';
+import { AppError, ERRORS, handleServerError } from '../helpers/errors.helper';
 import { STANDARD } from '../constants/request';
 import { UserResponseSchema } from '../schemas/User';
 import { RequestIdParamSchema } from '../schemas/Utils';
@@ -11,14 +11,20 @@ export const getUserById = async (
 ) => {
   try {
     const { id } = RequestIdParamSchema.parse(request.params);
-    const user = await prisma.user.findUniqueOrThrow({
+    const user = await prisma.user.findUnique({
       where: {
         id,
       },
     });
-    return reply
-      .code(STANDARD.OK.statusCode)
-      .send(UserResponseSchema.parse(user));
+
+    if (user == null) throw new AppError('Usuário não encontrado', 404);
+
+    return reply.code(STANDARD.OK.statusCode).send(
+      UserResponseSchema.parse({
+        ...user,
+        isScholarshipHolder: !!user?.scholarshipHolderId,
+      }),
+    );
   } catch (err) {
     return handleServerError(reply, err);
   }

@@ -1,7 +1,7 @@
 import fastify from 'fastify';
-import pino, { levels } from 'pino';
+import * as JWT from 'jsonwebtoken';
 import loadConfig from './config/env.config';
-import { utils } from './utils';
+import { prisma } from './utils';
 import cors from '@fastify/cors';
 import multipart from '@fastify/multipart';
 import fastifyStatic from '@fastify/static';
@@ -29,6 +29,37 @@ const startServer = async () => {
   });
   server.register(fastifySchedule);
 
+  server.addHook('preValidation', async (request, reply) => {
+    try {
+      const authorizationToken = request.headers.authorization;
+      if (!authorizationToken) {
+        return;
+      }
+
+      const token = authorizationToken.split('Bearer ')[1];
+      const decoded = JWT.verify(
+        token,
+        process.env.APP_JWT_SECRET as string,
+      ) as JWT.JwtPayload;
+
+      if (!decoded) {
+        return;
+      }
+
+      const user = await prisma.user.findUnique({
+        where: {
+          id: decoded.id,
+        },
+      });
+
+      if (user == null) return;
+
+      request['user'] = user;
+    } catch (err) {
+      reply.send(err);
+    }
+  });
+
   server.register(authRouter, { prefix: '/api/auth' });
   server.register(userRouter, { prefix: '/api/users' });
   server.register(itemRouter, { prefix: '/api/items' });
@@ -36,29 +67,13 @@ const startServer = async () => {
   server.register(studentRouter, { prefix: '/api/students' });
   server.register(campusRouter, { prefix: '/api/campi' });
 
-  // Set error handler
   server.setErrorHandler((error, _request, reply) => {
     server.log.error(error);
     reply
-      .status(Number(error.code))
+      .status(error.statusCode || 500)
       .send({ error: error.message || 'Something went wrong' });
   });
 
-  // Health check route
-  server.get('/health', async (_request, reply) => {
-    try {
-      await utils.healthCheck();
-      reply.status(200).send({
-        message: 'Health check endpoint success.',
-      });
-    } catch (e) {
-      reply.status(500).send({
-        message: 'Health check endpoint failed.',
-      });
-    }
-  });
-
-  // Graceful shutdown
   const signals: NodeJS.Signals[] = ['SIGINT', 'SIGTERM'];
   signals.forEach((signal) => {
     process.on(signal, async () => {
@@ -73,7 +88,6 @@ const startServer = async () => {
     });
   });
 
-  // Start server
   try {
     await server.listen({
       port,

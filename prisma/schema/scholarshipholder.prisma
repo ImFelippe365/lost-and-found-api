@@ -1,0 +1,5 @@
+model ScholarshipHolder {
+  id           Int    @id @unique @default(autoincrement()) @map("user_id")
+  registration String @unique
+  User         User?
+}

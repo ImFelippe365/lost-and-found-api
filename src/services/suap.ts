@@ -1,9 +1,10 @@
+import { AppError } from './../helpers/errors.helper';
 import {
   ISuapAPIUserDataResponseSchema,
   SuapAPITokenResponse,
   SuapAPIUserDataResponseSchema,
 } from './../schemas/SuapAPI';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 
 const api = axios.create({
   baseURL: 'https://suap.ifrn.edu.br/api/v2/',
@@ -21,15 +22,24 @@ export class SuapAPI {
   }
 
   async authenticate() {
-    const { data } = await api.post('autenticacao/token/', {
-      username: this.registration,
-      password: this.password,
-    });
+    try {
+      const { data } = await api.post('autenticacao/token/', {
+        username: this.registration,
+        password: this.password,
+      });
 
-    const { access, refresh } = SuapAPITokenResponse.parse(data);
+      const { access, refresh } = SuapAPITokenResponse.parse(data);
 
-    this.token = access;
-    this.refreshToken = refresh;
+      this.token = access;
+      this.refreshToken = refresh;
+    } catch (e) {
+      if (e instanceof AxiosError) {
+        throw new AppError(
+          e.request?.data?.detail || 'Houve um erro ao autenticar com o SUAP',
+          e.status || 500,
+        );
+      }
+    }
   }
 
   async getUserData(): Promise<ISuapAPIUserDataResponseSchema> {

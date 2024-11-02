@@ -5,7 +5,26 @@ import { FastifyReply, FastifyRequest } from 'fastify';
 import Zod, { ZodError } from 'zod';
 import { AppError, ERRORS } from './helpers/errors.helper';
 
-export const prisma = new PrismaClient();
+export const prisma = new PrismaClient().$extends({
+  model: {
+    user: {
+      async isScholarshipHolder(registration: string) {
+        const user = await prisma.user.findFirstOrThrow({
+          where: {
+            registration,
+          },
+          include: {
+            scholarshipHolder: true,
+          },
+        });
+
+        if (user?.department !== 'STUDENT') return false;
+
+        return !!user?.scholarshipHolderId;
+      },
+    },
+  },
+});
 
 export const utils = {
   objectIsEmpty: (data: object) => {
@@ -143,11 +162,14 @@ export const utils = {
       throw new AppError('Token inválido', ERRORS.invalidToken.statusCode);
     }
 
-    const user = await prisma.user.findUniqueOrThrow({
+    const user = await prisma.user.findUnique({
       where: {
         id: decoded.id,
       },
     });
+
+    if (user == null) throw new AppError('Usuário não encontrado', 404);
+
     req['user'] = user;
   },
 };

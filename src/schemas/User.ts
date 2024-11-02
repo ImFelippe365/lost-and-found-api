@@ -14,7 +14,7 @@ export const UserResponseSchema = z.object({
   name: z.string(),
   email: z.string().nullable(),
   department: DepartmentEnum,
-  isScholarshipHolder: z.boolean(),
+  isScholarshipHolder: z.boolean().nullable().optional(),
   createdAt: z.date(),
   picture: z.string().nullable(),
   campus: CampusSchema.nullable().optional(),

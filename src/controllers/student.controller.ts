@@ -27,10 +27,24 @@ export const listStudents = async (
 
     const currentPage = (+page - 1) * +size;
 
+    const scholarshipRegistrations = await prisma.scholarshipHolder.findMany({
+      select: {
+        registration: true,
+      },
+    });
+
+    const scholarshipRegistrationIds = scholarshipRegistrations.map(
+      (s) => s.registration,
+    );
+
     const users = await prisma.user.findMany({
       where: {
         department: 'STUDENT',
-        isScholarshipHolder: scholarshipStudent,
+        scholarshipHolder: scholarshipStudent
+          ? {
+              isNot: undefined,
+            }
+          : undefined,
         OR: [
           {
             email: {
@@ -59,7 +73,11 @@ export const listStudents = async (
     const totalUsersCount = await prisma.user.count({
       where: {
         department: 'STUDENT',
-        isScholarshipHolder: scholarshipStudent,
+        scholarshipHolder: scholarshipStudent
+          ? {
+              isNot: undefined,
+            }
+          : undefined,
         OR: [
           {
             email: {
@@ -85,7 +103,12 @@ export const listStudents = async (
 
     const totalPages = Math.round(totalUsersCount / size);
 
-    const response = users.map((u) => UserResponseSchema.parse(u));
+    const response = users.map((u) =>
+      UserResponseSchema.parse({
+        ...u,
+        isScholarshipHolder: !!u?.scholarshipHolderId,
+      }),
+    );
 
     return reply.code(STANDARD.OK.statusCode).send({
       totalPages,
@@ -116,18 +139,35 @@ export const toggleStudentPermissionAsScholarshipStudent = async (
         400,
       );
 
-    const updatedStudent = await prisma.user.update({
+    const isScholarshipHolder = await prisma.user.isScholarshipHolder(
+      student.registration,
+    );
+    if (isScholarshipHolder) {
+      await prisma.scholarshipHolder.delete({
+        where: {
+          registration: student.registration,
+        },
+      });
+    } else {
+      await prisma.scholarshipHolder.create({
+        data: {
+          registration: student.registration,
+        },
+      });
+    }
+
+    const updatedStudent = await prisma.user.findUniqueOrThrow({
       where: {
         id,
       },
-      data: {
-        isScholarshipHolder: !student.isScholarshipHolder,
-      },
     });
 
-    return reply
-      .code(STANDARD.OK.statusCode)
-      .send(UserResponseSchema.parse(updatedStudent));
+    return reply.code(STANDARD.OK.statusCode).send(
+      UserResponseSchema.parse({
+        ...updatedStudent,
+        isScholarshipHolder: !!updatedStudent?.scholarshipHolderId,
+      }),
+    );
   } catch (err) {
     return handleServerError(reply, err);
   }

@@ -60,6 +60,7 @@ export const login = async (request: FastifyRequest, reply: FastifyReply) => {
       email: suapUser.email,
       password: String(hashPass),
       campusId: campus.id,
+      isScholarshipHolder: undefined,
     };
 
     const user = await prisma.user.upsert({
@@ -81,7 +82,10 @@ export const login = async (request: FastifyRequest, reply: FastifyReply) => {
 
     return reply.code(STANDARD.OK.statusCode).send({
       token,
-      user: UserResponseSchema.parse(user),
+      user: UserResponseSchema.parse({
+        ...user,
+        isScholarshipHolder: !!user.scholarshipHolderId,
+      }),
     });
   } catch (err) {
     return handleServerError(reply, err);
