@@ -52,6 +52,12 @@ export const login = async (request: FastifyRequest, reply: FastifyReply) => {
       },
     });
 
+    const alreadyScholarshipHolder = await prisma.scholarshipHolder.findFirst({
+      where: {
+        registration,
+      },
+    });
+
     const payload = {
       registration,
       name: suapUser.nome_usual,
@@ -60,7 +66,7 @@ export const login = async (request: FastifyRequest, reply: FastifyReply) => {
       email: suapUser.email,
       password: String(hashPass),
       campusId: campus.id,
-      isScholarshipHolder: undefined,
+      scholarshipHolderId: alreadyScholarshipHolder?.id,
     };
 
     const user = await prisma.user.upsert({

@@ -7,6 +7,7 @@ import {
   IRequestIdParamSchema,
   PaginationRequestSchema,
   RequestIdParamSchema,
+  RequestRegistrationParamSchema,
 } from '../schemas/Utils';
 
 export const listStudents = async (
@@ -175,6 +176,98 @@ export const toggleStudentPermissionAsScholarshipStudent = async (
         isScholarshipHolder: !!updatedStudent?.scholarshipHolderId,
       }),
     );
+  } catch (err) {
+    return handleServerError(reply, err);
+  }
+};
+
+export const addStudentPermissionAsScholarshipStudent = async (
+  request: FastifyRequest,
+  reply: FastifyReply,
+) => {
+  try {
+    const { registration } = RequestRegistrationParamSchema.parse(
+      request.params,
+    );
+
+    const student = await prisma.user.findUnique({
+      where: {
+        registration,
+      },
+    });
+
+    if (student != null) {
+      if (student.department !== 'STUDENT')
+        throw new AppError(
+          'Não é possível tornar esse usuário como bolsista do sistema',
+          400,
+        );
+
+      if (student.scholarshipHolderId)
+        throw new AppError('Matrícula já cadastrada', 400);
+
+      await prisma.user.update({
+        where: {
+          registration,
+        },
+        data: {
+          scholarshipHolder: {
+            create: {
+              registration: student.registration,
+            },
+          },
+        },
+      });
+
+      return reply.code(STANDARD.NO_CONTENT.statusCode).send();
+    }
+
+    const registrationExists = await prisma.scholarshipHolder.findFirst({
+      where: {
+        registration,
+      },
+    });
+
+    if (registrationExists != null)
+      throw new AppError('Matrícula já cadastrada', 400);
+
+    await prisma.scholarshipHolder.create({
+      data: {
+        registration,
+      },
+    });
+
+    return reply.code(STANDARD.NO_CONTENT.statusCode).send();
+  } catch (err) {
+    return handleServerError(reply, err);
+  }
+};
+
+export const removeStudentAsPendingScholarshipStudent = async (
+  request: FastifyRequest,
+  reply: FastifyReply,
+) => {
+  try {
+    const { registration } = RequestRegistrationParamSchema.parse(
+      request.params,
+    );
+
+    const registrationExists = await prisma.scholarshipHolder.findFirst({
+      where: {
+        registration,
+      },
+    });
+
+    if (registrationExists == null)
+      throw new AppError('Matrícula não cadastrada', 404);
+
+    await prisma.scholarshipHolder.delete({
+      where: {
+        registration,
+      },
+    });
+
+    return reply.code(STANDARD.NO_CONTENT.statusCode).send();
   } catch (err) {
     return handleServerError(reply, err);
   }

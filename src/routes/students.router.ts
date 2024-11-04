@@ -1,7 +1,10 @@
 import { FastifyInstance } from 'fastify';
 import * as controllers from '../controllers';
 import { utils } from '../utils';
-import { PaginationRequestSchema } from '../schemas/Utils';
+import {
+  PaginationRequestSchema,
+  RequestRegistrationParamSchema,
+} from '../schemas/Utils';
 
 export async function studentRouter(fastify: FastifyInstance) {
   fastify.patch(
@@ -19,5 +22,23 @@ export async function studentRouter(fastify: FastifyInstance) {
       preHandler: utils.auth,
     },
     controllers.listStudents,
+  );
+
+  fastify.post(
+    '/:registration/scholarship',
+    {
+      preValidation: utils.preParamsValidation(RequestRegistrationParamSchema),
+      preHandler: utils.auth,
+    },
+    controllers.addStudentPermissionAsScholarshipStudent,
+  );
+
+  fastify.delete(
+    '/:registration/scholarship',
+    {
+      preValidation: utils.preParamsValidation(RequestRegistrationParamSchema),
+      preHandler: utils.auth,
+    },
+    controllers.removeStudentAsPendingScholarshipStudent,
   );
 }

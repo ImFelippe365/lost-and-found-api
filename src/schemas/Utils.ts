@@ -20,6 +20,10 @@ export const PaginationRequestSchema = z.object({
     .transform((value) => (!value ? 10 : Number(value))),
 });
 
+export const RequestRegistrationParamSchema = z.object({
+  registration: z.string(),
+});
+
 export const RequestIdParamSchema = z.object({
   id: z.string().transform((value) => Number(value)),
 });
