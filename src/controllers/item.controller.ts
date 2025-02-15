@@ -28,6 +28,8 @@ import path from 'node:path';
 
 const pump = util.promisify(pipeline);
 
+const IMAGE_DIR_PATH = './public/images';
+
 export const listPageable = async (
   request: FastifyRequest,
   reply: FastifyReply,
@@ -217,8 +219,12 @@ export const create = async (request: FastifyRequest, reply: FastifyReply) => {
       const imageFile = payload?.image as IImageAttachment;
       const imageType = imageFile.type.split('/')[1];
       const filename = imageFile.name;
-      const path = `./public/images/${randomUUID()}.${imageType}`;
+      const path = `${IMAGE_DIR_PATH}/${randomUUID()}.${imageType}`;
       const buffer = Buffer.from(imageFile?.fileDataInBase64, 'base64');
+
+      if (!fs.existsSync(IMAGE_DIR_PATH)) {
+        fs.mkdirSync(IMAGE_DIR_PATH, { recursive: true });
+      }
 
       fs.writeFileSync(path, buffer);
 
@@ -287,8 +293,12 @@ export const update = async (request: FastifyRequest, reply: FastifyReply) => {
       const imageFile = payload?.image as IImageAttachment;
       const imageType = imageFile.type.split('/')[1];
       const filename = imageFile.name;
-      const path = `./public/images/${randomUUID()}.${imageType}`;
+      const path = `${IMAGE_DIR_PATH}/${randomUUID()}.${imageType}`;
       const buffer = Buffer.from(imageFile?.fileDataInBase64, 'base64');
+
+      if (!fs.existsSync(IMAGE_DIR_PATH)) {
+        fs.mkdirSync(IMAGE_DIR_PATH, { recursive: true });
+      }
 
       fs.writeFileSync(path, buffer);
 
