@@ -304,26 +304,25 @@ export const update = async (request: FastifyRequest, reply: FastifyReply) => {
 
       fs.writeFileSync(path, buffer);
 
-      if (item.imageId) {
-        updatedImage = await prisma.image.update({
-          data: {
-            name: filename,
-            filetype: imageFile.type,
-            path: path.slice(1),
-            size: 0,
-          },
-          where: { id: item.imageId },
-        });
-      } else {
-        updatedImage = await prisma.image.create({
-          data: {
-            name: filename,
-            filetype: imageFile.type,
-            path: path.slice(1),
-            size: 0,
-          },
-        });
-      }
+      // if (item.imageId) {
+      //   updatedImage = await prisma.image.update({
+      //     data: {
+      //       name: filename,
+      //       filetype: imageFile.type,
+      //       path: path.slice(1),
+      //       size: 0,
+      //     },
+      //     where: { id: item.imageId },
+      //   });
+      // } else {
+      updatedImage = await prisma.image.create({
+        data: {
+          name: filename,
+          filetype: imageFile.type,
+          path: path.slice(1),
+          size: 0,
+        },
+      });
     }
 
     delete payload.image;
