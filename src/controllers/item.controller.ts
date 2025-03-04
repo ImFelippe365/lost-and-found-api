@@ -125,12 +125,14 @@ export const listById = async (
       const filePath = path.join(path.resolve(), item?.image?.path || '');
       const fileBuffer = fs.readFileSync(filePath);
 
-      const imageBase64 = fileBuffer.toString('base64');
-      imageToInclude = {
-        fileDataInBase64: imageBase64,
-        name: item.image?.name.split('.')[0],
-        type: item.image?.filetype,
-      } as IImageFileSchema;
+      if (fileBuffer) {
+        const imageBase64 = fileBuffer.toString('base64');
+        imageToInclude = {
+          fileDataInBase64: imageBase64,
+          name: item.image?.name.split('.')[0],
+          type: item.image?.filetype,
+        } as IImageFileSchema;
+      }
     }
 
     return reply.code(STANDARD.OK.statusCode).send(
