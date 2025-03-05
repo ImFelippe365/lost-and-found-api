@@ -1,5 +1,8 @@
 model ScholarshipHolder {
-  id           Int    @id @unique @default(autoincrement()) @map("user_id")
-  registration String @unique
+  id           Int     @id @unique @default(autoincrement()) @map("user_id")
+  name         String?
+  registration String  @unique
+  Campus       Campus  @relation(fields: [campusId], references: [id])
   User         User?
+  campusId     Int
 }

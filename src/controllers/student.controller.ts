@@ -4,11 +4,11 @@ import { AppError, handleServerError } from '../helpers/errors.helper';
 import { STANDARD } from '../constants/request';
 import { StudentUserQueryParams, UserResponseSchema } from '../schemas/User';
 import {
-  IRequestIdParamSchema,
   PaginationRequestSchema,
   RequestIdParamSchema,
   RequestRegistrationParamSchema,
 } from '../schemas/Utils';
+import { ISecureRequest } from 'src/types';
 
 export const listStudents = async (
   request: FastifyRequest,
@@ -157,7 +157,9 @@ export const toggleStudentPermissionAsScholarshipStudent = async (
         data: {
           scholarshipHolder: {
             create: {
+              name: student.name,
               registration: student.registration,
+              campusId: student.campusId,
             },
           },
         },
@@ -186,8 +188,10 @@ export const addStudentPermissionAsScholarshipStudent = async (
   reply: FastifyReply,
 ) => {
   try {
-    const { registration } = RequestRegistrationParamSchema.parse(
-      request.params,
+    const { user } = request as ISecureRequest;
+
+    const { name, registration } = RequestRegistrationParamSchema.parse(
+      request.body,
     );
 
     const student = await prisma.user.findUnique({
@@ -213,7 +217,9 @@ export const addStudentPermissionAsScholarshipStudent = async (
         data: {
           scholarshipHolder: {
             create: {
+              name: student.name,
               registration: student.registration,
+              campusId: student.campusId,
             },
           },
         },
@@ -233,7 +239,9 @@ export const addStudentPermissionAsScholarshipStudent = async (
 
     await prisma.scholarshipHolder.create({
       data: {
+        name,
         registration,
+        campusId: user.campusId,
       },
     });
 
@@ -268,6 +276,29 @@ export const removeStudentAsPendingScholarshipStudent = async (
     });
 
     return reply.code(STANDARD.NO_CONTENT.statusCode).send();
+  } catch (err) {
+    return handleServerError(reply, err);
+  }
+};
+
+export const listPendingScholarshipStudents = async (
+  request: FastifyRequest,
+  reply: FastifyReply,
+) => {
+  try {
+    const { user } = request as ISecureRequest;
+    const registrations = await prisma.scholarshipHolder.findMany({
+      where: {
+        campusId: user.campusId,
+        AND: {
+          User: {
+            is: null,
+          },
+        },
+      },
+    });
+
+    return reply.code(STANDARD.OK.statusCode).send(registrations);
   } catch (err) {
     return handleServerError(reply, err);
   }

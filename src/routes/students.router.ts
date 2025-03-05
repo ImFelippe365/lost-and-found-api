@@ -25,9 +25,9 @@ export async function studentRouter(fastify: FastifyInstance) {
   );
 
   fastify.post(
-    '/:registration/scholarship',
+    '/scholarship',
     {
-      preValidation: utils.preParamsValidation(RequestRegistrationParamSchema),
+      preValidation: utils.preBodyValidation(RequestRegistrationParamSchema),
       preHandler: utils.auth,
     },
     controllers.addStudentPermissionAsScholarshipStudent,
@@ -40,5 +40,13 @@ export async function studentRouter(fastify: FastifyInstance) {
       preHandler: utils.auth,
     },
     controllers.removeStudentAsPendingScholarshipStudent,
+  );
+
+  fastify.get(
+    '/scholarship/pending',
+    {
+      preHandler: utils.auth,
+    },
+    controllers.listPendingScholarshipStudents,
   );
 }

@@ -21,6 +21,7 @@ export const PaginationRequestSchema = z.object({
 });
 
 export const RequestRegistrationParamSchema = z.object({
+  name: z.string().optional().nullable(),
   registration: z.string(),
 });
 
