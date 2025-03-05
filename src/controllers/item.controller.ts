@@ -290,7 +290,7 @@ export const update = async (request: FastifyRequest, reply: FastifyReply) => {
       });
     }
 
-    let updatedImage = item?.imageId;
+    let updatedImage = item?.image;
     if (payload?.image) {
       const imageFile = payload?.image as IImageAttachment;
       const imageType = imageFile.type.split('/')[1];
