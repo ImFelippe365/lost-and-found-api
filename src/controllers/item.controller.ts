@@ -1,4 +1,4 @@
-import { *asbcrypt } from 'bcryptjs';
+import * as bcrypt from 'bcryptjs';
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { prisma, utils } from '../utils';
 import { AppError, handleServerError } from '../helpers/errors.helper';
@@ -6,7 +6,6 @@ import { STANDARD } from '../constants/request';
 import {
   ClaimItemSchema,
   CreateItemSchema,
-  IItemIDRequestParams,
   ItemDetailedResponseSchema,
   ItemIDRequestParamSchema,
   ItemQueriesSchema,
@@ -222,7 +221,7 @@ export const create = async (request: FastifyRequest, reply: FastifyReply) => {
       const imageFile = payload?.image as IImageAttachment;
       const imageType = imageFile.type.split('/')[1];
       const filename = imageFile.name;
-      const imagePath = path.join(path.resolve(), `${IMAGE_DIR_PATH}/${randomUUID()}.${imageType}`);
+      const imagePath = `${IMAGE_DIR_PATH}/${randomUUID()}.${imageType}`;
       const buffer = Buffer.from(imageFile?.fileDataInBase64, 'base64');
 
       if (!fs.existsSync(IMAGE_DIR_PATH)) {
@@ -302,14 +301,14 @@ export const update = async (request: FastifyRequest, reply: FastifyReply) => {
       const imageFile = payload?.image as IImageAttachment;
       const imageType = imageFile.type.split('/')[1];
       const filename = imageFile.name;
-      const path = `${IMAGE_DIR_PATH}/${randomUUID()}.${imageType}`;
+      const imagePath = `${IMAGE_DIR_PATH}/${randomUUID()}.${imageType}`;
       const buffer = Buffer.from(imageFile?.fileDataInBase64, 'base64');
 
       if (!fs.existsSync(IMAGE_DIR_PATH)) {
         fs.mkdirSync(IMAGE_DIR_PATH, { recursive: true });
       }
 
-      fs.writeFileSync(path, buffer);
+      fs.writeFileSync(imagePath, buffer);
 
       // if (item.imageId) {
       //   updatedImage = await prisma.image.update({
@@ -326,7 +325,7 @@ export const update = async (request: FastifyRequest, reply: FastifyReply) => {
         data: {
           name: filename,
           filetype: imageFile.type,
-          path: path.slice(1),
+          path: imagePath.slice(1),
           size: 0,
           Item: {
             connect: {
