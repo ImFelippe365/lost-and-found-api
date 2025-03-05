@@ -281,7 +281,7 @@ export const update = async (request: FastifyRequest, reply: FastifyReply) => {
       },
     });
 
-    if (item.imageId) {
+    if (item.imageId && payload?.image) {
       const imagePath = path.join(path.resolve(), item?.image?.path || '');
       fs.unlink(imagePath as string, async function () {
         await prisma.image.delete({
