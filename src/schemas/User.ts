@@ -39,7 +39,7 @@ export const StudentUserQueryParams = z.object({
 });
 
 export const ImageFileSchema = z.object({
-  fileDataInBase64: z.string(),
+  fileDataInBase64: z.string().nullable(),
   name: z.string(),
   type: z.string(),
 });
