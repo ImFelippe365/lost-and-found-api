@@ -83,7 +83,7 @@ export const ItemDetailedResponseSchema = z.object({
   createdBy: UserResponseSchema,
   claimedBy: ClaimedItemSchema.nullable().optional(),
   createdAt: z.date(),
-  image: ImageFileSchema.optional(),
+  image: ImageFileSchema.optional().nullable(),
   imagePath: z.string().optional(),
 });
 
