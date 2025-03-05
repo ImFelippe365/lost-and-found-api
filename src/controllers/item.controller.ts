@@ -122,7 +122,7 @@ export const listById = async (
 
     let imageToInclude;
     if (item?.imageId) {
-      const filePath = path.join(path.resolve(), item?.image?.path || '');
+      const filePath = item?.image?.path || '';
       const fileBuffer = fs.readFileSync(filePath);
 
       if (fileBuffer) {
