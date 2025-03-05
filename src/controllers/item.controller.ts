@@ -1,3 +1,4 @@
+import { *asbcrypt } from 'bcryptjs';
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { prisma, utils } from '../utils';
 import { AppError, handleServerError } from '../helpers/errors.helper';
@@ -290,7 +291,13 @@ export const update = async (request: FastifyRequest, reply: FastifyReply) => {
       });
     }
 
-    let updatedImage = item?.image;
+    const updatedItem = await prisma.item.update({
+      where: {
+        id: itemId,
+      },
+      data: { ...payload },
+    });
+
     if (payload?.image) {
       const imageFile = payload?.image as IImageAttachment;
       const imageType = imageFile.type.split('/')[1];
@@ -315,7 +322,7 @@ export const update = async (request: FastifyRequest, reply: FastifyReply) => {
       //     where: { id: item.imageId },
       //   });
       // } else {
-      updatedImage = await prisma.image.create({
+      await prisma.image.create({
         data: {
           name: filename,
           filetype: imageFile.type,
@@ -329,14 +336,6 @@ export const update = async (request: FastifyRequest, reply: FastifyReply) => {
         },
       });
     }
-
-    delete payload?.image;
-    const updatedItem = await prisma.item.update({
-      where: {
-        id: itemId,
-      },
-      data: { ...payload, imageId: updatedImage?.id },
-    });
 
     return reply
       .code(STANDARD.OK.statusCode)
