@@ -120,26 +120,26 @@ export const listById = async (
       },
     });
 
-    // let imageToInclude;
-    // if (item?.imageId) {
-    //   const filePath = item?.image?.path || '';
-    //   const fileBuffer = fs.readFileSync(filePath);
+    let imageToInclude;
+    if (item?.imageId) {
+      const filePath = item?.image?.path || '';
+      const fileBuffer = fs.readFileSync(filePath);
 
-    //   if (fileBuffer) {
-    //     const imageBase64 = fileBuffer.toString('base64');
-    //     imageToInclude = {
-    //       fileDataInBase64: imageBase64,
-    //       name: item.image?.name.split('.')[0],
-    //       type: item.image?.filetype,
-    //     } as IImageFileSchema;
-    //   }
-    // }
+      if (fileBuffer) {
+        const imageBase64 = fileBuffer.toString('base64');
+        imageToInclude = {
+          fileDataInBase64: imageBase64,
+          name: item.image?.name.split('.')[0],
+          type: item.image?.filetype,
+        } as IImageFileSchema;
+      }
+    }
 
     return reply.code(STANDARD.OK.statusCode).send(
       ItemDetailedResponseSchema.parse({
         ...item,
         claimedBy: item.ClaimedItem,
-        image: null,
+        image: imageToInclude,
         imagePath: item?.image?.path,
       }),
     );
@@ -290,13 +290,6 @@ export const update = async (request: FastifyRequest, reply: FastifyReply) => {
       });
     }
 
-    const updatedItem = await prisma.item.update({
-      where: {
-        id: itemId,
-      },
-      data: { ...payload },
-    });
-
     if (payload?.image) {
       const imageFile = payload?.image as IImageAttachment;
       const imageType = imageFile.type.split('/')[1];
@@ -335,6 +328,14 @@ export const update = async (request: FastifyRequest, reply: FastifyReply) => {
         },
       });
     }
+
+    delete payload?.image;
+    const updatedItem = await prisma.item.update({
+      where: {
+        id: itemId,
+      },
+      data: { ...payload },
+    });
 
     return reply
       .code(STANDARD.OK.statusCode)
