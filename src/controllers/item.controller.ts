@@ -330,6 +330,7 @@ export const update = async (request: FastifyRequest, reply: FastifyReply) => {
       });
     }
 
+    delete payload?.image;
     const updatedItem = await prisma.item.update({
       where: {
         id: itemId,
