@@ -329,12 +329,20 @@ export const update = async (request: FastifyRequest, reply: FastifyReply) => {
       });
     }
 
-    delete payload.image;
     const updatedItem = await prisma.item.update({
       where: {
         id: itemId,
       },
-      data: { ...payload },
+      data: {
+        name: payload.name,
+        description: payload.description,
+        foundBy: payload.foundBy,
+        foundDate: payload.foundDate,
+        foundLocation: payload.foundLocation,
+        pickupLocation: payload.pickupLocation,
+        shift: payload.shift,
+        withdrawalDeadline: payload.withdrawalDeadline,
+      },
     });
 
     return reply
