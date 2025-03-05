@@ -290,6 +290,7 @@ export const update = async (request: FastifyRequest, reply: FastifyReply) => {
       });
     }
 
+    let updatedImage = item?.image;
     if (payload?.image) {
       const imageFile = payload?.image as IImageAttachment;
       const imageType = imageFile.type.split('/')[1];
@@ -314,7 +315,7 @@ export const update = async (request: FastifyRequest, reply: FastifyReply) => {
       //     where: { id: item.imageId },
       //   });
       // } else {
-      await prisma.image.create({
+      updatedImage = await prisma.image.create({
         data: {
           name: filename,
           filetype: imageFile.type,
@@ -333,16 +334,7 @@ export const update = async (request: FastifyRequest, reply: FastifyReply) => {
       where: {
         id: itemId,
       },
-      data: {
-        name: payload.name,
-        description: payload.description,
-        foundBy: payload.foundBy,
-        foundDate: payload.foundDate,
-        foundLocation: payload.foundLocation,
-        pickupLocation: payload.pickupLocation,
-        shift: payload.shift,
-        withdrawalDeadline: payload.withdrawalDeadline,
-      },
+      data: { ...payload, imageId: updatedImage?.id },
     });
 
     return reply
