@@ -53,7 +53,7 @@ export const listPageable = async (
         status: status,
       },
       orderBy: {
-        name: orderNameBy,
+        createdAt: orderNameBy,
       },
       take: size,
       skip: totalContentCount,
